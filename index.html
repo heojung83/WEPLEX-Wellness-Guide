@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WEPLEX WELLNESS - 시설 관리 시스템</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --bg: #fdf8f0;
+    --bg2: #f5ede0;
+    --card: #ffffff;
+    --dark: #1a1208;
+    --accent: #c4862a;
+    --accent2: #e8a83e;
+    --text: #2d1f0a;
+    --text2: #6b5033;
+    --text3: #9c7a50;
+    --border: #e8d8c0;
+    --radius: 14px;
+    --shadow: 0 4px 24px rgba(100,60,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ===== LANDING ===== */
+  #landing { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; }
+  .landing-brand { font-size: 11px; letter-spacing: 0.25em; color: var(--accent); font-weight: 500; margin-bottom: 1rem; text-transform: uppercase; }
+  .landing-title { font-family: 'Noto Serif KR', serif; font-size: clamp(1.4rem, 3.5vw, 2.2rem); font-weight: 600; color: var(--dark); margin-bottom: 0.75rem; text-align: center; }
+  .landing-sub { color: var(--text2); font-size: 15px; margin-bottom: 3rem; text-align: center; line-height: 1.7; }
+  .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; max-width: 700px; width: 100%; }
+  .role-card { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 2.75rem 2.25rem; cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden; }
+  .role-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); transform: scaleX(0); transition: transform 0.25s; transform-origin: left; }
+  .role-card:hover { transform: translateY(-3px); }
+  .role-card:hover::before { transform: scaleX(1); }
+  .role-card.admin-card { background: #1B4F8A; border-color: #1B4F8A; }
+  .role-card.admin-card::before { background: #90CAF9; }
+  .role-card.admin-card .role-title { color: #fff; }
+  .role-card.admin-card .role-desc { color: rgba(255,255,255,0.72); }
+  .role-card.admin-card .role-features li { color: rgba(255,255,255,0.6); }
+  .role-card.admin-card .role-features li::before { color: #90CAF9; }
+  .role-card.admin-card .role-link { color: #90CAF9; }
+  .role-card.admin-card .role-icon { background: rgba(255,255,255,0.15); }
+  .role-card.staff-card { background: #fff; border: 2px solid #E85D04; }
+  .role-card.staff-card::before { background: #E85D04; }
+  .role-card.staff-card .role-title { color: #7C2D12; }
+  .role-card.staff-card .role-desc { color: #9A3412; }
+  .role-card.staff-card .role-features li { color: #C2410C; }
+  .role-card.staff-card .role-features li::before { color: #E85D04; }
+  .role-card.staff-card .role-link { color: #E85D04; }
+  .role-card.staff-card .role-icon { background: #FFF0E6; }
+  .role-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem; font-size: 26px; background: linear-gradient(135deg, var(--bg2), var(--border)); }
+  .role-title { font-weight: 700; font-size: 24px; margin-bottom: 0.6rem; }
+  .role-desc { color: var(--text2); font-size: 15px; line-height: 1.7; margin-bottom: 1.5rem; }
+  .role-features { list-style: none; margin-bottom: 1.75rem; }
+  .role-features li { font-size: 14px; color: var(--text3); padding: 4px 0; display: flex; align-items: center; gap: 6px; }
+  .role-features li::before { content: '✓'; color: var(--accent); font-weight: 700; font-size: 13px; }
+  .role-link { color: var(--accent); font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 4px; }
+  .landing-footer { margin-top: 3rem; font-size: 11px; color: var(--text3); }
+
+  /* 개념 A 히어로 카드 */
+  .hero-card { background: #E85D04; border-radius: 20px; padding: 2.5rem 2.75rem; width: 100%; max-width: 420px; text-align: center; cursor: pointer; transition: transform 0.2s; }
+  .hero-card:hover { transform: translateY(-4px); }
+  .hero-label { font-size: 11px; letter-spacing: 0.15em; color: rgba(255,255,255,0.75); text-transform: uppercase; margin-bottom: 1rem; font-weight: 500; }
+  .hero-icon { width: 64px; height: 64px; background: rgba(255,255,255,0.18); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.1rem; }
+  .hero-title { font-family: 'Noto Serif KR', serif; font-size: 26px; font-weight: 600; color: #fff; margin-bottom: 0.5rem; }
+  .hero-desc { font-size: 14px; color: rgba(255,255,255,0.82); line-height: 1.7; margin-bottom: 1.5rem; }
+  .hero-btn { background: #fff; color: #C2410C; border: none; border-radius: 12px; padding: 13px 36px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity 0.2s; }
+  .hero-btn:hover { opacity: 0.92; }
+  .admin-text-link { margin-top: 1.25rem; font-size: 13px; color: var(--text3); }
+  .admin-text-link span { color: #1B4F8A; font-weight: 600; cursor: pointer; text-decoration: underline; }
+
+  /* ===== HEADER ===== */
+  .page-header { background: var(--dark); color: #fff; padding: 0 2rem; height: 58px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .header-left { display: flex; align-items: center; gap: 1rem; }
+  .header-brand { font-size: 10px; letter-spacing: 0.2em; color: var(--accent2); font-weight: 500; }
+  .header-title { font-size: 17px; font-weight: 600; color: #fff; }
+  .btn-back { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 12px; font-family: inherit; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
+  .btn-back:hover { background: rgba(255,255,255,0.2); }
+  .header-actions { display: flex; gap: 8px; }
+  .btn-pdf { background: var(--accent); color: #fff; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
+  .btn-pdf:hover { background: var(--accent2); }
+  .btn-save { background: #2563eb; color: #fff; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; font-weight: 500; transition: background 0.2s; }
+  .btn-save:hover { background: #1d4ed8; }
+  .btn-reset { background: rgba(220,38,38,0.15); color: #ef4444; border: 1px solid rgba(220,38,38,0.3); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; transition: background 0.2s; }
+  .btn-reset:hover { background: rgba(220,38,38,0.25); }
+
+  /* ===== LAYOUT ===== */
+  .app-layout { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 58px); }
+  .sidebar { background: var(--card); border-right: 1px solid var(--border); padding: 1.5rem 1rem; overflow-y: auto; }
+  .sidebar-title { font-size: 11px; letter-spacing: 0.12em; color: var(--text3); font-weight: 500; margin-bottom: 0.75rem; padding: 0 0.5rem; text-transform: uppercase; }
+  .facility-item { padding: 10px 12px; border-radius: 10px; cursor: pointer; margin-bottom: 4px; transition: all 0.18s; border: 1.5px solid transparent; }
+  .facility-item:hover { background: var(--bg); }
+  .facility-item.active { background: var(--bg2); border-color: var(--accent); }
+  .facility-item.disabled { opacity: 0.45; }
+  .facility-item.disabled .facility-name { text-decoration: line-through; }
+  .facility-name { font-size: 14px; font-weight: 500; color: var(--text); display: flex; align-items: center; gap: 5px; }
+  .facility-type { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .facility-actions { display: none; gap: 4px; margin-top: 6px; }
+  .facility-item.active .facility-actions { display: flex; }
+  .fac-btn { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; font-size: 10px; font-family: inherit; cursor: pointer; color: var(--text2); transition: all 0.15s; white-space: nowrap; }
+  .fac-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--bg); }
+  .fac-btn.disable-btn { color: #b45309; border-color: #fcd34d; background: #fffbeb; }
+  .fac-btn.disable-btn:hover { background: #fef3c7; }
+  .fac-btn.enable-btn { color: #15803d; border-color: #86efac; background: #f0fdf4; }
+  .fac-btn.enable-btn:hover { background: #dcfce7; }
+  .fac-name-input { font-size: 13px; font-weight: 500; font-family: inherit; color: var(--text); background: var(--card); border: 1px solid var(--accent); border-radius: 6px; padding: 2px 6px; width: 100%; outline: none; margin-bottom: 4px; }
+  .disabled-badge { font-size: 9px; background: #fee2e2; color: #b91c1c; padding: 1px 5px; border-radius: 4px; font-weight: 500; }
+  .btn-add-facility { width: 100%; margin-top: 1rem; padding: 10px; background: var(--bg2); border: 1.5px dashed var(--border); border-radius: 10px; cursor: pointer; font-size: 13px; color: var(--text3); font-family: inherit; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn-add-facility:hover { border-color: var(--accent); color: var(--accent); background: var(--bg); }
+
+  /* ===== MAIN CONTENT ===== */
+  .main-content { padding: 2rem; overflow-y: auto; background: var(--bg); }
+
+  /* ===== ADMIN FORM ===== */
+  .section-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem; }
+  .section-card h3 { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 11px; color: var(--text2); font-weight: 500; letter-spacing: 0.05em; }
+  .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; color: var(--text); background: var(--bg); transition: border-color 0.2s; outline: none; }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-group input:focus, .form-group textarea:focus { border-color: var(--accent); background: var(--card); }
+  .form-group.full { grid-column: 1 / -1; }
+
+  /* Section editor */
+  .section-editor { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; margin-bottom: 0.75rem; position: relative; }
+  .section-editor-header { display: flex; align-items: center; gap: 8px; margin-bottom: 0.75rem; }
+  .section-editor-header input { flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; font-family: inherit; font-weight: 500; background: var(--card); outline: none; }
+  .section-editor-header input:focus { border-color: var(--accent); }
+  .required-toggle { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text3); cursor: pointer; white-space: nowrap; }
+  .required-toggle input { width: 14px; height: 14px; accent-color: var(--accent); }
+  .btn-del-section { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 16px; padding: 4px; transition: color 0.2s; }
+  .btn-del-section:hover { color: #ef4444; }
+  .btn-add-item { background: var(--card); border: 1px dashed var(--border); border-radius: 7px; padding: 7px 12px; font-size: 12px; color: var(--text3); cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 5px; transition: all 0.2s; width: 100%; }
+  .btn-add-item:hover { border-color: var(--accent2); color: var(--accent); }
+  .detail-item { display: flex; gap: 6px; margin-bottom: 5px; align-items: flex-start; }
+  .detail-item textarea { flex: 1; padding: 7px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 12px; font-family: inherit; background: var(--card); min-height: 50px; resize: vertical; outline: none; }
+  .detail-item textarea:focus { border-color: var(--accent); }
+  .btn-del-item { background: none; border: none; cursor: pointer; color: #d1d5db; font-size: 14px; padding: 8px 4px; transition: color 0.2s; }
+  .btn-del-item:hover { color: #ef4444; }
+  .btn-add-section { width: 100%; padding: 10px; background: var(--bg2); border: 1.5px dashed var(--border); border-radius: 10px; cursor: pointer; font-size: 13px; color: var(--accent); font-family: inherit; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn-add-section:hover { border-color: var(--accent); background: var(--bg); }
+
+  /* QR & Photos */
+  .media-section { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .media-card { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; }
+  .media-card h4 { font-size: 12px; color: var(--text2); font-weight: 500; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 6px; }
+  .qr-items { display: flex; flex-direction: column; gap: 6px; }
+  .qr-item { display: flex; gap: 6px; align-items: center; }
+  .qr-item input { flex: 1; padding: 7px 10px; border: 1px solid var(--border); border-radius: 7px; font-size: 12px; font-family: inherit; background: var(--card); outline: none; }
+  .qr-item input:focus { border-color: var(--accent); }
+  .photo-upload-area { border: 1.5px dashed var(--border); border-radius: 10px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .photo-upload-area:hover { border-color: var(--accent); background: var(--bg2); }
+  .photo-upload-area input[type=file] { display: none; }
+  .photo-upload-area p { font-size: 12px; color: var(--text3); margin-top: 6px; }
+
+  /* 관리자 사진 편집 카드 */
+  .photo-edit-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 10px; }
+  .photo-edit-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .photo-edit-card img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+  .photo-edit-body { padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 5px; }
+  .photo-edit-body input { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-family: inherit; background: var(--bg); color: var(--text); outline: none; }
+  .photo-edit-body input:focus { border-color: var(--accent); }
+  .photo-edit-body input::placeholder { color: var(--text3); }
+  .photo-edit-del { width: 100%; background: none; border: 1px solid #fca5a5; color: #ef4444; border-radius: 6px; padding: 4px; font-size: 11px; font-family: inherit; cursor: pointer; transition: background 0.2s; }
+  .photo-edit-del:hover { background: #fee2e2; }
+
+  /* 사용자 화면 사진 그리드 - 2열로 크게 */
+  .photos-display-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 20px; }
+  .photo-display-item { display: flex; flex-direction: column; gap: 8px; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+  .photo-display-item:last-child, .photo-display-item:nth-last-child(2):nth-child(odd) { border-bottom: none; }
+  .photo-display-item img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); }
+  .photo-display-caption { font-size: 13px; color: var(--text2); text-align: center; line-height: 1.6; }
+  .photo-display-title { font-size: 14px; font-weight: 600; color: var(--text); text-align: center; }
+
+  .pdf-attach-area { border: 1.5px dashed var(--border); border-radius: 10px; padding: 1rem; cursor: pointer; transition: all 0.2s; }
+  .pdf-attach-area:hover { border-color: var(--accent); }
+  .pdf-attach-area input[type=file] { display: none; }
+  .pdf-attached { display: flex; align-items: center; gap: 8px; margin-top: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; }
+  .pdf-attached span { font-size: 12px; flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ===== USER VIEW ===== */
+  .user-layout { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 58px); }
+  .user-sidebar { background: var(--card); border-right: 1px solid var(--border); padding: 1.5rem 1rem; }
+  .user-main { padding: 2rem; background: var(--bg); overflow-y: auto; }
+
+  .facility-info-header { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem; }
+  .facility-info-header h1 { font-family: 'Noto Serif KR', serif; font-size: 22px; font-weight: 600; color: var(--dark); margin-bottom: 0.25rem; }
+  .facility-meta { font-size: 12px; color: var(--text3); margin-bottom: 0.5rem; }
+  .map-buttons { display: flex; gap: 8px; margin: 0.75rem 0; flex-wrap: wrap; }
+  .btn-map { padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 500; cursor: pointer; border: none; font-family: inherit; transition: opacity 0.2s; }
+  .btn-map:hover { opacity: 0.85; }
+  .btn-naver { background: #03c75a; color: #fff; }
+  .btn-kakao { background: #fee500; color: #3c1e1e; }
+  .btn-google { background: #4285f4; color: #fff; }
+  .checkin-info { display: flex; gap: 2rem; margin-top: 1rem; }
+  .checkin-item label { font-size: 11px; color: var(--text3); display: block; margin-bottom: 4px; }
+  .checkin-item span { font-size: 22px; font-weight: 700; color: var(--dark); font-family: 'Noto Serif KR', serif; }
+
+  .content-section { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+  .content-section h3 { font-size: 14px; font-weight: 600; color: var(--dark); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 6px; }
+  .section-title-marker { display: inline-block; width: 10px; height: 10px; background: var(--accent); border-radius: 2px; flex-shrink: 0; }
+  .required-badge { background: #fef3c7; color: #92400e; font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 500; }
+  .content-section p { font-size: 13px; color: var(--text2); line-height: 1.8; }
+  .content-section ul { list-style: none; }
+  .content-section ul li { font-size: 13px; color: var(--text2); padding: 5px 0; display: flex; align-items: flex-start; gap: 8px; line-height: 1.7; border-bottom: 0.5px solid var(--border); }
+  .content-section ul li:last-child { border-bottom: none; }
+  .content-section ul li::before { content: '•'; color: var(--accent); font-size: 16px; flex-shrink: 0; line-height: 1.4; }
+  .section-main-text { font-size: 14px; color: var(--text); line-height: 1.75; white-space: pre-wrap; }
+
+  /* Media display */
+  .qr-display-grid { display: flex; flex-wrap: wrap; gap: 1.25rem; }
+  .qr-display-item { text-align: center; }
+  .qr-display-item p { font-size: 11px; color: var(--text3); margin-top: 6px; }
+  .photos-display-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .photos-display-grid img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); }
+
+  /* Print styles */
+  @media print {
+    body { background: #fff; }
+    .page-header, .user-sidebar, #landing, #admin-view { display: none !important; }
+    #user-view { display: block !important; }
+    .user-layout { display: block; }
+    .user-main { padding: 0; }
+    .content-section, .facility-info-header { break-inside: avoid; box-shadow: none; }
+    .media-section-print { page-break-before: always; }
+    .btn-pdf, .map-buttons, .print-hide { display: none !important; }
+    /* 인쇄 시 사진은 3열 */
+    .photos-display-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .photo-display-item img { aspect-ratio: 4/3; border-radius: 6px; }
+    .photo-display-title { font-size: 11px; font-weight: 600; }
+    .photo-display-caption { font-size: 10px; color: #555; }
+    /* 인쇄 시 섹션 제목 마커 */
+    .section-title-marker { display: inline-block; width: 10px; height: 10px; background: #1a1208; border-radius: 2px; margin-right: 6px; vertical-align: middle; flex-shrink: 0; }
+  }
+
+  .hidden { display: none !important; }
+  .tag-required { color: #d97706; font-size: 10px; }
+
+  /* ===== PASSWORD MODAL ===== */
+  .pw-overlay { position: fixed; inset: 0; background: rgba(26,18,8,0.55); z-index: 500; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+  .pw-modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 2.5rem 2rem; width: 360px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.18); }
+  .pw-modal .pw-icon { font-size: 36px; margin-bottom: 1rem; }
+  .pw-modal h2 { font-family: 'Noto Serif KR', serif; font-size: 20px; font-weight: 600; color: var(--dark); margin-bottom: 0.4rem; }
+  .pw-modal p { font-size: 13px; color: var(--text3); margin-bottom: 1.5rem; line-height: 1.6; }
+  .pw-input-wrap { position: relative; margin-bottom: 1rem; }
+  .pw-input-wrap input { width: 100%; padding: 12px 44px 12px 16px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; font-family: inherit; letter-spacing: 0.15em; text-align: center; outline: none; background: var(--bg); color: var(--text); transition: border-color 0.2s; }
+  .pw-input-wrap input:focus { border-color: var(--accent); background: var(--card); }
+  .pw-input-wrap input.shake { animation: shake 0.4s; border-color: #ef4444; }
+  .pw-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text3); font-size: 16px; }
+  .pw-btn { width: 100%; padding: 12px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-family: inherit; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+  .pw-btn:hover { background: var(--accent2); }
+  .pw-cancel { margin-top: 0.75rem; background: none; border: none; color: var(--text3); font-size: 13px; font-family: inherit; cursor: pointer; }
+  .pw-cancel:hover { color: var(--text); }
+  .pw-error { color: #ef4444; font-size: 12px; margin-bottom: 0.75rem; min-height: 18px; }
+  .pw-hint { font-size: 11px; color: var(--text3); margin-top: 0.75rem; }
+
+  /* 비밀번호 잠금 섹션 */
+  .secret-locked { background: var(--bg2); border: 1.5px dashed var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; }
+  .secret-locked:hover { border-color: var(--accent); background: var(--bg); }
+  .secret-locked .lock-icon { font-size: 22px; }
+  .secret-locked h3 { font-size: 14px; font-weight: 600; color: var(--dark); margin-bottom: 2px; }
+  .secret-locked p { font-size: 12px; color: var(--text3); }
+  .secret-locked .unlock-btn { margin-left: auto; background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-family: inherit; font-weight: 500; cursor: pointer; white-space: nowrap; }
+
+  /* 관리자 섹션 비밀 토글 */
+  .secret-toggle { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text3); cursor: pointer; white-space: nowrap; }
+  .secret-toggle input { width: 14px; height: 14px; accent-color: #7c3aed; }
+
+  /* 관리자 비번 설정 */
+  .pw-setting-row { display: flex; align-items: center; gap: 8px; }
+  .pw-setting-row input { flex: 1; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: inherit; color: var(--text); background: var(--bg); outline: none; letter-spacing: 0.1em; }
+  .pw-setting-row input:focus { border-color: var(--accent); }
+  .pw-setting-row button { padding: 9px 14px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 12px; font-family: inherit; cursor: pointer; white-space: nowrap; }
+
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
+
+  .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--dark); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 13px; z-index: 9999; opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  html { font-size: 106%; }
+  .user-main { max-width: 1100px; }
+
+  /* ===== 모바일 전용 (768px 이하) - PC에는 영향 없음 ===== */
+  @media (max-width: 768px) {
+    /* 랜딩 */
+    .landing-title { font-size: 1.8rem; }
+    .hero-card { padding: 2rem 1.25rem; }
+    .hero-title { font-size: 22px; }
+    .hero-btn { width: 100%; padding: 14px; font-size: 15px; }
+
+    /* 헤더 */
+    .page-header { padding: 0 1rem; height: 52px; }
+    .header-brand { display: none; }
+    .header-title { font-size: 15px; }
+    .btn-back { padding: 5px 10px; font-size: 11px; }
+    .btn-pdf { padding: 7px 12px; font-size: 12px; }
+
+    /* 사용자 화면: 사이드바 → 가로 탭 스크롤로 */
+    .user-layout { grid-template-columns: 1fr; }
+    .user-sidebar {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 0.75rem;
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+    }
+    .user-sidebar .sidebar-title { display: none; }
+    .user-sidebar .facility-item {
+      display: inline-flex;
+      flex-direction: column;
+      padding: 6px 14px;
+      border-radius: 20px;
+      margin-bottom: 0;
+      background: var(--bg2);
+      border: 1.5px solid transparent;
+      min-width: auto;
+      flex-shrink: 0;
+    }
+    .user-sidebar .facility-item.active { border-color: var(--accent); background: var(--bg2); }
+    .user-sidebar .facility-name { font-size: 12px; }
+    .user-sidebar .facility-type { font-size: 10px; }
+
+    /* 관리자 화면: 사이드바 → 가로 탭 */
+    .app-layout { grid-template-columns: 1fr; }
+    .sidebar {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 0.75rem;
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+    }
+    .sidebar .sidebar-title { display: none; }
+    .sidebar .facility-item {
+      display: inline-flex;
+      flex-direction: column;
+      padding: 6px 14px;
+      border-radius: 20px;
+      margin-bottom: 0;
+      background: var(--bg2);
+      border: 1.5px solid transparent;
+      min-width: auto;
+      flex-shrink: 0;
+    }
+    .sidebar .btn-add-facility { flex-shrink: 0; width: auto; margin-top: 0; padding: 6px 14px; border-radius: 20px; }
+
+    /* 콘텐츠 패딩 축소 */
+    .user-main { padding: 1rem; max-width: 100%; }
+    .main-content { padding: 1rem; }
+
+    /* 기본 정보 카드 */
+    .facility-info-header { padding: 1rem; }
+    .facility-info-header h1 { font-size: 18px; }
+    .checkin-info { gap: 1.5rem; }
+    .checkin-item span { font-size: 20px; }
+
+    /* 사진 그리드 모바일 1열 */
+    .photos-display-grid { grid-template-columns: 1fr !important; }
+    .photo-edit-grid { grid-template-columns: 1fr; }
+
+    /* 관리자 form-grid 1열 */
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: 1; }
+
+    /* 비밀번호 모달 */
+    .pw-modal { width: calc(100vw - 2rem); padding: 2rem 1.5rem; }
+
+    /* 객실 현황 표 스크롤 */
+    .content-section div[style*="overflow-x"] { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  }
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- PASSWORD MODAL -->
+<div id="pw-overlay" class="pw-overlay hidden">
+  <div class="pw-modal">
+    <div class="pw-icon" id="pw-icon">🔐</div>
+    <h2 id="pw-title">관리자 비밀번호</h2>
+    <p id="pw-desc">관리자 메뉴에 접근하려면<br>비밀번호를 입력하세요.</p>
+    <div class="pw-input-wrap">
+      <input type="password" id="pw-input" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')submitPw()">
+      <button class="pw-toggle" onclick="togglePwVis()" id="pw-vis-btn">👁</button>
+    </div>
+    <p class="pw-error" id="pw-error"></p>
+    <button class="pw-btn" onclick="submitPw()">확인</button>
+    <br>
+    <button class="pw-cancel" onclick="closePwModal()">취소</button>
+    <p class="pw-hint" id="pw-hint"></p>
+  </div>
+</div>
+
+<!-- LANDING -->
+<div id="landing">
+  <p class="landing-brand">WEPLEX WELLNESS</p>
+  <h1 class="landing-title">웹케시그룹 휴양시설 이용 안내</h1>
+  <p class="landing-sub">시설별 이용방침을 확인하고 열람하세요.</p>
+  <div class="hero-card" onclick="goUser()">
+    <p class="hero-label">임직원 전용</p>
+    <div class="hero-icon">
+      <svg width="32" height="28" viewBox="0 0 30 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="15" cy="6" r="3"/><path d="M9 22c0-3.3 2.7-6 6-6s6 2.7 6 6"/>
+        <circle cx="5" cy="8" r="2.5"/><path d="M0 22c0-2.8 2.2-5 5-5s5 2.2 5 5"/>
+        <circle cx="25" cy="8" r="2.5"/><path d="M20 22c0-2.8 2.2-5 5-5s5 2.2 5 5"/>
+      </svg>
+    </div>
+    <p class="hero-title">이용방침 열람</p>
+    <p class="hero-desc">시설을 선택하여 이용방침을 확인하고<br>인쇄할 수 있습니다.</p>
+    <button class="hero-btn" onclick="goUser()">열람 시작하기 →</button>
+  </div>
+  <p class="admin-text-link">관리자이신가요? <span onclick="askAdminPw()">관리자 로그인</span></p>
+  <p class="landing-footer">© 2026 WEPLEX WELLNESS. All rights reserved.</p>
+</div>
+
+<!-- ADMIN VIEW -->
+<div id="admin-view" class="hidden">
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" onclick="goLanding()">← 홈으로</button>
+      <div>
+        <div class="header-brand">WEPLEX WELLNESS</div>
+        <div class="header-title">시설 관리</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-reset" onclick="resetData()">초기화</button>
+      <button class="btn-save" onclick="saveData()">💾 저장</button>
+    </div>
+  </div>
+  <div class="app-layout">
+    <div class="sidebar">
+      <p class="sidebar-title">시설 선택</p>
+      <div id="admin-facility-list"></div>
+      <button class="btn-add-facility" onclick="addFacility()">+ 시설 추가</button>
+    </div>
+    <div class="main-content" id="admin-main-content">
+      <p style="color: var(--text3); font-size: 14px;">좌측에서 시설을 선택하세요.</p>
+    </div>
+  </div>
+</div>
+
+<!-- USER VIEW -->
+<div id="user-view" class="hidden">
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" onclick="goLanding()">← 홈으로</button>
+      <div>
+        <div class="header-brand">WEPLEX WELLNESS</div>
+        <div class="header-title">휴양시설 이용방침 열람</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-pdf" onclick="printPage()">🖨 PDF 저장 / 인쇄</button>
+    </div>
+  </div>
+  <div class="user-layout">
+    <div class="user-sidebar">
+      <p class="sidebar-title">시설 선택</p>
+      <div id="user-facility-list"></div>
+    </div>
+    <div class="user-main" id="user-main-content">
+      <p style="color: var(--text3); font-size: 14px;">좌측에서 시설을 선택하세요.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA STORE =====
+// 사진/PDF는 메모리에만 보관 (localStorage 용량 초과 방지)
+const photoStore = {}; // { facilityId: [base64, ...] }
+const pdfStore = {};   // { facilityId: { file: base64, name: str } }
+const vehiclePhotoStore = {}; // { facilityId: base64 }
+
+const DEFAULT_DATA = {
+  facilities: [
+    {
+      id: 'f1',
+      name: '위플렉스 제주',
+      subtitle: '객실형 휴양시설',
+      category: '객실형 휴양시설',
+      description: '제주 휴양시설 이용 방침 안내',
+      address: '제주 서귀포시 대정읍 상모리 76 (형제탑카운 258)',
+      mapUrl: 'https://map.naver.com/v5/entry/place/13410699477',
+      directionsUrl: '',
+      checkIn: '15:00',
+      checkOut: '11:00',
+      policy: { operationDate:'', penalty:'', etc:'' },
+      rooms: [],
+      sections: [
+        { id: 's1', title: '[위치 안내]', required: false, secret: false, sectionPw: '', mainText: '위플렉스 건물 옆 도로변 주차', items: [] },
+        { id: 's2', title: '[입실절차 및 비밀번호]', required: false, secret: true, sectionPw: '', mainText: '', items: [] },
+        { id: 's3', title: '[입실 후 이용 규정]', required: false, secret: false, sectionPw: '', mainText: '', items: [] },
+        { id: 's4', title: '[퇴실 시 절차]', required: false, secret: false, sectionPw: '', mainText: '', items: [] },
+        { id: 's5', title: '[유의사항]', required: false, secret: false, sectionPw: '', mainText: '', items: [] },
+      ],
+      qrItems: [{ label: '네이버 지도', url: 'https://map.naver.com/v5/entry/place/13410699477' }],
+      photos: [],
+      pdfFile: null,
+      pdfName: null,
+    },
+    { id:'f2', name:'청평 크레이에르빌라', subtitle:'빌라형 휴양시설', category:'빌라형 휴양시설', description:'', address:'', mapUrl:'', directionsUrl:'', checkIn:'15:00', checkOut:'11:00', policy:{operationDate:'',penalty:'',etc:''}, rooms:[], sections:[], qrItems:[], photos:[], pdfFile:null, pdfName:null },
+    { id:'f3', name:'속초 서희 2차', subtitle:'아파트형 휴양시설', category:'아파트형 휴양시설', description:'', address:'', mapUrl:'', directionsUrl:'', checkIn:'15:00', checkOut:'11:00', policy:{operationDate:'',penalty:'',etc:''}, rooms:[], sections:[], qrItems:[], photos:[], pdfFile:null, pdfName:null },
+    { id:'f4', name:'속초 청호아이파크', subtitle:'아파트형 휴양시설', category:'아파트형 휴양시설', description:'', address:'', mapUrl:'', directionsUrl:'', checkIn:'15:00', checkOut:'11:00', policy:{operationDate:'',penalty:'',etc:''}, rooms:[], sections:[], qrItems:[], photos:[], pdfFile:null, pdfName:null },
+    { id:'f5', name:'우이동 We CAMP', subtitle:'캠핑형 휴양시설', category:'캠핑형 휴양시설', description:'', address:'', mapUrl:'', directionsUrl:'', checkIn:'15:00', checkOut:'11:00', policy:{operationDate:'',penalty:'',etc:''}, rooms:[], sections:[], qrItems:[], photos:[], pdfFile:null, pdfName:null },
+  ]
+};
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem('weplex_data');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // 전역 policy 제거 (구버전 호환)
+      delete parsed.policy;
+      parsed.facilities = parsed.facilities.map(f => {
+        // 사진/PDF 빈값 보완
+        const facility = { photos: [], pdfFile: null, pdfName: null, ...f };
+        // 섹션마다 secret/sectionPw 필드 없으면 보완
+        // 단, s2([입실절차 및 비밀번호]) 섹션은 secret 기본값 true
+        facility.sections = (facility.sections || []).map(s => {
+          const isPasswordSection = s.id === 's2' || s.title.includes('비밀번호');
+          return {
+            secret: isPasswordSection ? true : false,
+            sectionPw: '',
+            ...s
+          };
+        });
+        // 시설별 policy 없으면 보완 (구버전 호환)
+        if (!facility.policy) facility.policy = {operationDate:'',penalty:'',etc:''};
+        if (!facility.rooms) facility.rooms = [];
+        return facility;
+      });
+      return parsed;
+    }
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+function saveData() {
+  try {
+    const textOnly = {
+      facilities: appData.facilities.map(f => {
+        const copy = Object.assign({}, f);
+        delete copy.photos;
+        delete copy.pdfFile;
+        delete copy.pdfName;
+        return copy;
+      })
+    };
+    localStorage.setItem('weplex_data', JSON.stringify(textOnly));
+    showToast('저장되었습니다 ✓');
+  } catch(e) {
+    showToast('⚠ 저장 실패 — 데이터가 너무 큽니다');
+  }
+}
+function resetData() {
+  if (!confirm('모든 데이터를 초기화하시겠습니까?')) return;
+  appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  localStorage.removeItem('weplex_data');
+  renderAdminFacilityList();
+  document.getElementById('admin-main-content').innerHTML = '<p style="color:var(--text3);font-size:14px">좌측에서 시설을 선택하세요.</p>';
+  showToast('초기화되었습니다');
+}
+
+let appData = loadData();
+let currentAdminFacility = null;
+let currentUserFacility = null;
+
+// ===== PASSWORD SYSTEM =====
+const DEFAULT_ADMIN_PW = '1234';
+let pwCallback = null;
+let pwMode = null;
+let unlockedSections = {};
+
+function getAdminPw() {
+  return localStorage.getItem('weplex_admin_pw') || DEFAULT_ADMIN_PW;
+}
+function setAdminPw(pw) {
+  localStorage.setItem('weplex_admin_pw', pw);
+}
+
+function showPwModal({ icon, title, desc, hint, onSuccess, onCancel }) {
+  document.getElementById('pw-icon').textContent = icon || '🔐';
+  document.getElementById('pw-title').textContent = title || '비밀번호';
+  document.getElementById('pw-desc').innerHTML = desc || '';
+  document.getElementById('pw-hint').textContent = hint || '';
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-error').textContent = '';
+  document.getElementById('pw-overlay').classList.remove('hidden');
+  document.getElementById('pw-input').focus();
+  pwCallback = { onSuccess, onCancel };
+}
+function closePwModal() {
+  document.getElementById('pw-overlay').classList.add('hidden');
+  if (pwCallback && pwCallback.onCancel) pwCallback.onCancel();
+  pwCallback = null;
+}
+function togglePwVis() {
+  const inp = document.getElementById('pw-input');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+function submitPw() {
+  if (pwCallback && pwCallback.onSuccess) pwCallback.onSuccess(document.getElementById('pw-input').value);
+}
+function shakePwInput(msg) {
+  const inp = document.getElementById('pw-input');
+  document.getElementById('pw-error').textContent = msg;
+  inp.classList.add('shake');
+  setTimeout(() => inp.classList.remove('shake'), 400);
+  inp.value = '';
+  inp.focus();
+}
+
+function askAdminPw() {
+  showPwModal({
+    icon: '🏛',
+    title: '관리자 비밀번호',
+    desc: '관리자 메뉴에 접근하려면<br>비밀번호를 입력하세요.',
+    hint: '초기 비밀번호: 1234',
+    onSuccess: (pw) => {
+      if (pw === getAdminPw()) {
+        closePwModal();
+        goAdmin();
+      } else {
+        shakePwInput('비밀번호가 틀렸습니다.');
+      }
+    },
+    onCancel: null
+  });
+}
+
+function askSectionPw(fid, sid, sectionPw, sectionTitle) {
+  showPwModal({
+    icon: '🔒',
+    title: '비밀 섹션',
+    desc: `<strong>${sectionTitle}</strong><br>비밀번호를 입력하면 내용이 표시됩니다.`,
+    hint: '',
+    onSuccess: (pw) => {
+      if (pw === sectionPw) {
+        unlockedSections[fid + '_' + sid] = true;
+        closePwModal();
+        renderUserContent(fid);
+      } else {
+        shakePwInput('비밀번호가 틀렸습니다.');
+      }
+    },
+    onCancel: null
+  });
+}
+
+// ===== NAVIGATION =====
+function goLanding() {
+  document.getElementById('landing').classList.remove('hidden');
+  document.getElementById('admin-view').classList.add('hidden');
+  document.getElementById('user-view').classList.add('hidden');
+}
+function goAdmin() {
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('admin-view').classList.remove('hidden');
+  document.getElementById('user-view').classList.add('hidden');
+  renderAdminFacilityList();
+}
+function goUser() {
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('admin-view').classList.add('hidden');
+  document.getElementById('user-view').classList.remove('hidden');
+  // 관리자에서 보던 시설을 직원 화면에서도 바로 표시
+  if (currentAdminFacility && currentAdminFacility !== '__policy__') {
+    currentUserFacility = currentAdminFacility;
+  }
+  renderUserFacilityList();
+  if (currentUserFacility) renderUserContent(currentUserFacility);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ===== ADMIN: FACILITY LIST =====
+function renderAdminFacilityList() {
+  const list = document.getElementById('admin-facility-list');
+  list.innerHTML = appData.facilities.map(f => {
+    const isActive = currentAdminFacility === f.id;
+    const isDisabled = f.disabled;
+    return `
+    <div class="facility-item ${isActive?'active':''} ${isDisabled?'disabled':''}"
+         onclick="selectAdminFacility('${f.id}')">
+      <div class="facility-name">
+        ${isDisabled ? '<span class="disabled-badge">비활성</span>' : ''}
+        ${f.name}
+      </div>
+      <div class="facility-type">${f.subtitle||'—'}</div>
+      <div class="facility-actions" onclick="event.stopPropagation()">
+        <input class="fac-name-input" value="${esc(f.name)}"
+          oninput="updateField('${f.id}','name',this.value);renderAdminFacilityList()"
+          onclick="event.stopPropagation()"
+          placeholder="시설명 수정">
+        <div style="display:flex;gap:4px">
+          ${isDisabled
+            ? `<button class="fac-btn enable-btn" onclick="toggleDisable('${f.id}',false)">✓ 활성화</button>`
+            : `<button class="fac-btn disable-btn" onclick="toggleDisable('${f.id}',true)">⊘ 비활성화</button>`
+          }
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDisable(fid, val) {
+  const f = appData.facilities.find(x => x.id === fid);
+  if (f) f.disabled = val;
+  renderAdminFacilityList();
+  showToast(val ? '비활성화되었습니다' : '활성화되었습니다');
+}
+
+function addFacility() {
+  const name = prompt('시설 이름을 입력하세요:');
+  if (!name) return;
+  const id = 'f' + Date.now();
+  appData.facilities.push({ id, name, subtitle:'', category:'', description:'', address:'', mapUrl:'', directionsUrl:'', checkIn:'15:00', checkOut:'11:00', sections:[], qrItems:[], photos:[], pdfFile:null, pdfName:null });
+  saveData();
+  renderAdminFacilityList();
+  selectAdminFacility(id);
+}
+
+function selectAdminFacility(id) {
+  currentAdminFacility = id;
+  renderAdminFacilityList();
+  renderAdminForm(id);
+}
+
+// ===== ADMIN: FORM =====
+function renderAdminForm(fid) {
+  const f = appData.facilities.find(x => x.id === fid);
+  if (!f) return;
+  const mc = document.getElementById('admin-main-content');
+  mc.innerHTML = `
+    <div class="section-card">
+      <h3>🔐 관리자 비밀번호 변경</h3>
+      <div class="pw-setting-row">
+        <input type="password" id="new-admin-pw" placeholder="새 비밀번호 입력" autocomplete="new-password">
+        <button onclick="changeAdminPw()">변경</button>
+      </div>
+      <p style="font-size:11px;color:var(--text3);margin-top:8px">현재 비밀번호: ${getAdminPw().replace(/./g,'●')}</p>
+    </div>
+
+    <div class="section-card">
+      <h3>📋 기본 정보</h3>
+      <div class="form-grid">
+        <div class="form-group"><label>시설명</label><input id="f-name" value="${esc(f.name)}" oninput="updateField('${fid}','name',this.value)"></div>
+        <div class="form-group"><label>Subtitle</label><input id="f-subtitle" value="${esc(f.subtitle)}" oninput="updateField('${fid}','subtitle',this.value)"></div>
+        <div class="form-group full"><label>제목 (이용방침 안내)</label><input id="f-description" value="${esc(f.description)}" oninput="updateField('${fid}','description',this.value)"></div>
+        <div class="form-group full"><label>주소</label><input id="f-address" value="${esc(f.address)}" oninput="updateField('${fid}','address',this.value)"></div>
+        <div class="form-group full"><label>지도 링크 (mapUrl)</label><input id="f-mapUrl" value="${esc(f.mapUrl)}" oninput="updateField('${fid}','mapUrl',this.value)" placeholder="https://map.naver.com/..."></div>
+        <div class="form-group full"><label>길찾기 링크 (directionsUrl)</label><input id="f-directionsUrl" value="${esc(f.directionsUrl)}" oninput="updateField('${fid}','directionsUrl',this.value)" placeholder="https://..."></div>
+        <div class="form-group"><label>체크인</label><input id="f-checkin" value="${esc(f.checkIn)}" oninput="updateField('${fid}','checkIn',this.value)" placeholder="15:00"></div>
+        <div class="form-group"><label>체크아웃</label><input id="f-checkout" value="${esc(f.checkOut)}" oninput="updateField('${fid}','checkOut',this.value)" placeholder="11:00"></div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h3>📋 운영 방침</h3>
+      <div class="form-grid">
+        <div class="form-group full"><label>운영 일자 / 예약 기준</label><textarea style="min-height:60px" placeholder="예: 매월 25일 오전 10시 선착순 오픈" oninput="updatePolicy('${fid}','operationDate',this.value)">${esc((f.policy||{}).operationDate||'')}</textarea></div>
+        <div class="form-group full"><label>패널티</label><textarea style="min-height:60px" placeholder="예: 노쇼 시 다음 분기 이용 제한" oninput="updatePolicy('${fid}','penalty',this.value)">${esc((f.policy||{}).penalty||'')}</textarea></div>
+        <div class="form-group full"><label>기타 운영 방식</label><textarea style="min-height:60px" placeholder="예: 동반 가족 외 외부인 출입 불가" oninput="updatePolicy('${fid}','etc',this.value)">${esc((f.policy||{}).etc||'')}</textarea></div>
+        <div class="form-group full">
+          <label>🚗 차량 이용 안내</label>
+          <textarea style="min-height:80px" placeholder="예: 카니발 차량은 공용 차량으로 당일 시간을 지정하여 예약 바랍니다." oninput="updatePolicy('${fid}','vehicle',this.value)">${esc((f.policy||{}).vehicle||'')}</textarea>
+          <div style="margin-top:8px">
+            <label style="font-size:11px;color:var(--text3);font-weight:500">차량 사진 (선택)</label>
+            <div style="margin-top:5px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <div class="photo-upload-area" style="padding:10px 20px;display:inline-flex;align-items:center;gap:8px" onclick="document.getElementById('vehicle-img-${fid}').click()">
+                <input type="file" id="vehicle-img-${fid}" accept="image/*" onchange="handleVehiclePhoto('${fid}',this)">
+                <span style="font-size:18px">📷</span><span style="font-size:12px;color:var(--text3)">사진 선택</span>
+              </div>
+              <div id="vehicle-preview-${fid}" style="display:flex;align-items:center;gap:8px">
+                ${vehiclePhotoStore[fid] ? `<img src="${vehiclePhotoStore[fid]}" style="height:60px;border-radius:8px;border:1px solid var(--border)"><button onclick="deleteVehiclePhoto('${fid}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px">✕ 삭제</button>` : '<span style="font-size:12px;color:var(--text3)">선택된 사진 없음</span>'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <h3>🏠 객실 현황</h3>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:12px">행을 추가/삭제하여 시설별 객실 정보를 입력하세요. 사용자 화면과 인쇄에 반영됩니다.</p>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px" id="room-table-${fid}">
+          <thead>
+            <tr style="background:var(--bg2)">
+              <th style="padding:8px 10px;border:1px solid var(--border);text-align:left;font-weight:600;white-space:nowrap">시설 명칭</th>
+              <th style="padding:8px 10px;border:1px solid var(--border);text-align:left;font-weight:600;white-space:nowrap">기준 인원</th>
+              <th style="padding:8px 10px;border:1px solid var(--border);text-align:left;font-weight:600;white-space:nowrap">룸 타입</th>
+              <th style="padding:8px 10px;border:1px solid var(--border);text-align:left;font-weight:600">추가 안내사항</th>
+              <th style="padding:8px 6px;border:1px solid var(--border);width:36px"></th>
+            </tr>
+          </thead>
+          <tbody id="room-tbody-${fid}">
+            ${renderRoomRows(fid)}
+          </tbody>
+        </table>
+      </div>
+      <button class="btn-add-section" style="margin-top:10px" onclick="addRoomRow('${fid}')">+ 행 추가</button>
+    </div>
+
+    <div class="section-card">
+      <h3>📝 기본 섹션</h3>
+      <div id="sections-container">${renderSections(fid)}</div>
+      <button class="btn-add-section" onclick="addSection('${fid}')">+ 섹션 추가</button>
+    </div>
+
+    <div class="section-card">
+      <h3>🔗 QR 관리</h3>
+      <div class="qr-items" id="qr-container">${renderQrItems(fid)}</div>
+      <button class="btn-add-item" onclick="addQrItem('${fid}')" style="margin-top:8px">+ QR 추가</button>
+    </div>
+
+    <div class="section-card">
+      <h3>🖼 사진 관리</h3>
+      <p style="font-size:11px;color:var(--text3);margin-bottom:10px">사진마다 제목과 설명을 입력할 수 있습니다. 사용자 화면과 인쇄에 동일하게 반영됩니다.</p>
+      <div class="photo-upload-area" onclick="document.getElementById('photo-input-${fid}').click()">
+        <input type="file" id="photo-input-${fid}" multiple accept="image/*" onchange="handlePhotos('${fid}',this)">
+        <div style="font-size:28px">📷</div>
+        <p>클릭하여 사진 추가 (여러 장 선택 가능)</p>
+      </div>
+      <div class="photo-edit-grid" id="photo-grid-${fid}">${renderPhotos(fid)}</div>
+    </div>
+
+    <div class="section-card">
+      <h3>📎 PDF 첨부</h3>
+      <div class="pdf-attach-area" onclick="document.getElementById('pdf-input-${fid}').click()">
+        <input type="file" id="pdf-input-${fid}" accept=".pdf" onchange="handlePdf('${fid}',this)">
+        <p style="font-size:13px;color:var(--text3)">${f.pdfName ? '📎 ' + f.pdfName : '📄 클릭하여 PDF 첨부 (이용자 화면에 다운로드 링크 표시)'}</p>
+      </div>
+    </div>
+
+    <div style="margin-top:1rem; display:flex; gap:8px; padding-bottom:2rem">
+      <button onclick="deleteFacility('${fid}')" style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;border-radius:8px;padding:9px 18px;cursor:pointer;font-size:13px;font-family:inherit">🗑 시설 삭제</button>
+    </div>
+  `;
+}
+
+function renderSections(fid) {
+  const f = appData.facilities.find(x => x.id === fid);
+  if (!f.sections || f.sections.length === 0) return '';
+  return f.sections.map(s => `
+    <div class="section-editor" id="se-${s.id}">
+      <div class="section-editor-header">
+        <input value="${esc(s.title)}" placeholder="섹션 제목 (예: [위치 안내])" oninput="updateSectionField('${fid}','${s.id}','title',this.value)">
+        <label class="required-toggle"><input type="checkbox" ${s.required?'checked':''} onchange="updateSectionField('${fid}','${s.id}','required',this.checked)"> 필수</label>
+        <label class="secret-toggle"><input type="checkbox" ${s.secret?'checked':''} onchange="toggleSecretSection('${fid}','${s.id}',this.checked)"> 🔒 비밀</label>
+        <button class="btn-del-section" onclick="deleteSection('${fid}','${s.id}')">✕</button>
+      </div>
+      ${s.secret ? `<div class="form-group" style="margin-bottom:8px">
+        <label style="font-size:10px;color:#7c3aed">🔑 비밀 섹션 비밀번호 (사용자가 입력해야 열람 가능)</label>
+        <input type="text" placeholder="비밀번호 설정..." value="${esc(s.sectionPw||'')}" oninput="updateSectionField('${fid}','${s.id}','sectionPw',this.value)" style="letter-spacing:0.1em">
+      </div>` : ''}
+      <div class="form-group" style="margin-bottom:8px">
+        <label style="font-size:10px;color:var(--text3)">주요 내용</label>
+        <textarea placeholder="본문 내용..." oninput="updateSectionField('${fid}','${s.id}','mainText',this.value)">${esc(s.mainText||'')}</textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:6px"><label style="font-size:10px;color:var(--text3)">세부 항목</label></div>
+      <div id="items-${s.id}">${(s.items||[]).map((it,i)=>`
+        <div class="detail-item">
+          <textarea placeholder="세부 내용..." oninput="updateItemText('${fid}','${s.id}',${i},this.value)">${esc(it)}</textarea>
+          <button class="btn-del-item" onclick="deleteItem('${fid}','${s.id}',${i})">✕</button>
+        </div>`).join('')}</div>
+      <button class="btn-add-item" onclick="addItem('${fid}','${s.id}')">+ 항목 추가</button>
+    </div>
+  `).join('');
+}
+
+function renderQrItems(fid) {
+  const f = appData.facilities.find(x => x.id === fid);
+  return (f.qrItems||[]).map((q,i) => `
+    <div class="qr-item">
+      <input value="${esc(q.label)}" placeholder="라벨" oninput="updateQrItem('${fid}',${i},'label',this.value)" style="max-width:120px">
+      <input value="${esc(q.url)}" placeholder="URL" oninput="updateQrItem('${fid}',${i},'url',this.value)">
+      <button class="btn-del-item" onclick="deleteQrItem('${fid}',${i})" style="font-size:14px">✕</button>
+    </div>`).join('');
+}
+
+function renderPhotos(fid) {
+  const photos = photoStore[fid] || [];
+  if (!photos.length) return '';
+  return photos.map((p, i) => `
+    <div class="photo-edit-card">
+      <img src="${p.src}" alt="photo">
+      <div class="photo-edit-body">
+        <input type="text" placeholder="사진 제목 (예: 거실)" value="${esc(p.title||'')}"
+          oninput="updatePhotoMeta('${fid}',${i},'title',this.value)">
+        <input type="text" placeholder="설명 (예: 넓은 거실 공간)" value="${esc(p.caption||'')}"
+          oninput="updatePhotoMeta('${fid}',${i},'caption',this.value)">
+        <button class="photo-edit-del" onclick="deletePhoto('${fid}',${i})">🗑 삭제</button>
+      </div>
+    </div>`).join('');
+}
+
+function updatePhotoMeta(fid, idx, key, val) {
+  if (photoStore[fid] && photoStore[fid][idx]) photoStore[fid][idx][key] = val;
+}
+
+// ===== ADMIN: DATA UPDATERS =====
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function updateField(fid, key, val) {
+  const f = appData.facilities.find(x => x.id === fid);
+  if (f) f[key] = val;
+}
+function updateSectionField(fid, sid, key, val) {
+  const f = appData.facilities.find(x => x.id === fid);
+  const s = f && f.sections.find(x => x.id === sid);
+  if (s) s[key] = val;
+}
+function updateItemText(fid, sid, idx, val) {
+  const f = appData.facilities.find(x => x.id === fid);
+  const s = f && f.sections.find(x => x.id === sid);
+  if (s) s.items[idx] = val;
+}
+function updateQrItem(fid, idx, key, val) {
+  const f = appData.facilities.find(x => x.id === fid);
+  if (f && f.qrItems[idx]) f.qrItems[idx][key] = val;
+}
+
+function addSection(fid) {
+  const f = appData.facilities.find(x => x.id === fid);
+  if (!f.sections) f.sections = [];
+  f.sections.push({ id:'s'+Date.now(), title:'새로운 섹션', required:false, mainText:'', items:[] });
+  document.getElementById('sections-container').innerHTML = renderSections(fid);
+}
+function deleteSection(fid, sid) {
+  const f = appData.facilities.find(x => x.id === fid);
+  f.sections = f.sections.filter(x => x.id !== sid);
+  document.getElementById('sections-container').innerHTML = renderSections(fid);
+}
+function addItem(fid, sid) {
+  const f = appData.facilities.find(x => x.id === fid);
+  const s = f.sections.find(x => x.id === sid);
+  s.items.push('');
+  document.getElementById('sections-container').innerHTML = renderSections(fid);
+}
+function deleteItem(fid, sid, idx) {
+  const f = appData.facilities.find(x => x.id === fid);
+  const s = f.sections.find(x => x.id === sid);
+  s.items.splice(idx, 1);
+  document.getElementById('sections-container').innerHTML = renderSections(fid);
+}
+function addQrItem(fid) {
+  const f = appData.facilities.find(x => x.id === fid);
+  if (!f.qrItems) f.qrItems = [];
+  f.qrItems.push({ label:'QR '+( f.qrItems.length+1), url:'' });
+  document.getElementById('qr-container').innerHTML = renderQrItems(fid);
+}
+function deleteQrItem(fid, idx) {
+  const f = appData.facilities.find(x => x.id === fid);
+  f.qrItems.splice(idx, 1);
+  document.getElementById('qr-container').innerHTML = renderQrItems(fid);
+}
+function updatePolicy(fid, key, val) {
+  const f = appData.facilities.find(x => x.id === fid);
+  if (f) { if (!f.policy) f.policy = {}; f.policy[key] = val; }
+}
+function handleVehiclePhoto(fid, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    vehiclePhotoStore[fid] = e.target.result;
+    const preview = document.getElementById('vehicle-preview-' + fid);
+    if (preview) preview.innerHTML = `<img src="${e.target.result}" style="height:60px;border-radius:8px;border:1px solid var(--border)"><button onclick="deleteVehiclePhoto('${fid}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px">✕ 삭제</button>`;
+  };
+  reader.readAsDataURL(file);
+}
+function deleteVehiclePhoto(fid) {
+  delete vehiclePhotoStore[fid];
+  const preview = document.getElementById('vehicle-preview-' + fid);
+  if (preview) preview.innerHTML = '<span style="font-size:12px;color:var(--text3)">선택된 사진 없음</span>';
+}
+
+// ===== ROOM TABLE =====
+function renderRoomRows(fid) {
+  const f = appData.facilities.find(x => x.id === fid);
+  const rows = f.rooms || [];
+  if (!rows.length) return '';
+  return rows.map((r, i) => `
+    <tr>
+      <td style="padding:4px 6px;border:1px solid var(--border)"><input value="${esc(r.name||'')}" placeholder="객실 (301호)" style="width:100%;border:none;background:transparent;font-size:13px;font-family:inherit;outline:none" oninput="updateRoomCell('${fid}',${i},'name',this.value)"></td>
+      <td style="padding:4px 6px;border:1px solid var(--border)"><input value="${esc(r.guests||'')}" placeholder="2명" style="width:80px;border:none;background:transparent;font-size:13px;font-family:inherit;outline:none" oninput="updateRoomCell('${fid}',${i},'guests',this.value)"></td>
+      <td style="padding:4px 6px;border:1px solid var(--border)"><input value="${esc(r.type||'')}" placeholder="원룸 (침실)" style="width:100%;border:none;background:transparent;font-size:13px;font-family:inherit;outline:none" oninput="updateRoomCell('${fid}',${i},'type',this.value)"></td>
+      <td style="padding:4px 6px;border:1px solid var(--border)"><input value="${esc(r.note||'')}" placeholder="침실(킹) 2개, 욕실 1개" style="width:100%;border:none;background:transparent;font-size:13px;font-family:inherit;outline:none" oninput="updateRoomCell('${fid}',${i},'note',this.value)"></td>
+      <td style="padding:4px 6px;border:1px solid var(--border);text-align:center"><button onclick="deleteRoomRow('${fid}',${i})" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px;padding:2px">✕</button></td>
+    </tr>`).join('');
+}
+function addRoomRow(fid) {
+  const f = appData.facilities.find(x => x.id === fid);
+  if (!f.rooms) f.rooms = [];
+  f.rooms.push({ name:'', guests:'', type:'', note:'' });
+  document.getElementById('room-tbody-'+fid).innerHTML = renderRoomRows(fid);
+}
+function deleteRoomRow(fid, idx) {
+  const f = appData.facilities.find(x => x.id === fid);
+  f.rooms.splice(idx, 1);
+  document.getElementById('room-tbody-'+fid).innerHTML = renderRoomRows(fid);
+}
+function updateRoomCell(fid, idx, key, val) {
+  const f = appData.facilities.find(x => x.id === fid);
+  if (f && f.rooms[idx]) f.rooms[idx][key] = val;
+}
+function toggleSecretSection(fid, sid, val) {
+  const f = appData.facilities.find(x => x.id === fid);
+  const s = f && f.sections.find(x => x.id === sid);
+  if (s) { s.secret = val; if (!val) s.sectionPw = ''; }
+  document.getElementById('sections-container').innerHTML = renderSections(fid);
+}
+function changeAdminPw() {
+  const inp = document.getElementById('new-admin-pw');
+  const newPw = inp.value.trim();
+  if (!newPw) { showToast('⚠ 비밀번호를 입력하세요'); return; }
+  setAdminPw(newPw);
+  inp.value = '';
+  showToast('관리자 비밀번호가 변경되었습니다 ✓');
+  renderAdminForm(currentAdminFacility);
+}
+function deleteFacility(fid) {
+  if (!confirm('이 시설을 삭제하시겠습니까?')) return;
+  appData.facilities = appData.facilities.filter(x => x.id !== fid);
+  currentAdminFacility = null;
+  saveData();
+  renderAdminFacilityList();
+  document.getElementById('admin-main-content').innerHTML = '<p style="color:var(--text3);font-size:14px">좌측에서 시설을 선택하세요.</p>';
+}
+
+function handlePhotos(fid, input) {
+  if (!photoStore[fid]) photoStore[fid] = [];
+  const files = Array.from(input.files);
+  let pending = files.length;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      photoStore[fid].push({ src: e.target.result, title: '', caption: '' });
+      pending--;
+      if (!pending) document.getElementById('photo-grid-'+fid).innerHTML = renderPhotos(fid);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function deletePhoto(fid, idx) {
+  if (photoStore[fid]) photoStore[fid].splice(idx, 1);
+  document.getElementById('photo-grid-'+fid).innerHTML = renderPhotos(fid);
+}
+function handlePdf(fid, input) {
+  const f = appData.facilities.find(x => x.id === fid);
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    if (!pdfStore[fid]) pdfStore[fid] = {};
+    pdfStore[fid].file = e.target.result;
+    pdfStore[fid].name = file.name;
+    f.pdfName = file.name; // 이름만 메타로 보관
+    showToast('PDF 첨부됨: ' + file.name);
+    renderAdminForm(fid);
+  };
+  reader.readAsDataURL(file);
+}
+
+// ===== USER VIEW =====
+function renderUserFacilityList() {
+  const list = document.getElementById('user-facility-list');
+  const active = appData.facilities.filter(f => !f.disabled);
+  list.innerHTML = active.map(f => `
+    <div class="facility-item ${currentUserFacility===f.id?'active':''}" onclick="selectUserFacility('${f.id}')">
+      <div class="facility-name">${f.name}</div>
+      <div class="facility-type">${f.subtitle}</div>
+    </div>`).join('');
+  // currentUserFacility가 없거나 비활성 시설이면 첫 번째 자동 선택
+  const isValid = active.some(f => f.id === currentUserFacility);
+  if (active.length > 0 && !isValid) {
+    currentUserFacility = active[0].id;
+    renderUserContent(active[0].id);
+  }
+}
+function selectUserFacility(id) {
+  currentUserFacility = id;
+  unlockedSections = {}; // 시설 전환 시 잠금 초기화
+  document.querySelectorAll('#user-facility-list .facility-item').forEach(el => el.classList.remove('active'));
+  renderUserContent(id);
+  renderUserFacilityList();
+}
+
+function renderUserContent(fid) {
+  const f = appData.facilities.find(x => x.id === fid);
+  if (!f) return;
+  const mc = document.getElementById('user-main-content');
+
+  const naverQ = encodeURIComponent(f.address || f.name);
+  const kakaoQ = encodeURIComponent(f.address || f.name);
+  const googleQ = encodeURIComponent((f.address || f.name) + ' ' + f.name);
+
+  let sectionsHtml = (f.sections||[]).map(s => {
+    const hasContent = (s.mainText && s.mainText.trim()) || (s.items && s.items.filter(it=>it&&it.trim()).length > 0);
+    const isSecret = s.secret && s.sectionPw;
+    // 비밀섹션은 잠금UI 표시 (제목만 있어도)
+    if (isSecret && !unlockedSections[fid + '_' + s.id]) {
+      if (!s.title) return '';
+      return `
+        <div class="secret-locked" onclick="askSectionPw('${fid}','${s.id}','${esc(s.sectionPw)}','${esc(s.title)}')">
+          <span class="lock-icon">🔒</span>
+          <div>
+            <h3>${s.title}</h3>
+            <p>비밀번호를 입력하면 열람할 수 있습니다.</p>
+          </div>
+          <button class="unlock-btn">비밀번호 입력</button>
+        </div>`;
+    }
+    // 제목도 없고 내용도 없으면 숨김
+    if (!s.title && !hasContent) return '';
+    // 제목은 있지만 내용이 없으면 숨김
+    if (!hasContent) return '';
+    const itemsHtml = (s.items||[]).filter(it=>it&&it.trim()).map(it => `<li>${it}</li>`).join('');
+    return `
+      <div class="content-section">
+        <h3>${s.title||'섹션'} ${s.required ? '<span class="required-badge">필수</span>' : ''} ${s.secret ? '<span style="font-size:11px;color:#7c3aed;background:#f3e8ff;padding:2px 8px;border-radius:20px">🔓 열람됨</span>' : ''}</h3>
+        ${s.mainText ? `<p class="section-main-text">${s.mainText}</p>` : ''}
+        ${itemsHtml ? `<ul style="margin-top:8px">${itemsHtml}</ul>` : ''}
+      </div>`;
+  }).join('');
+
+  // 운영방침 카드 생성
+  const pol = f.policy || {};
+  const polFields = [
+    { label: '운영 일자 / 예약 기준', value: pol.operationDate },
+    { label: '패널티', value: pol.penalty },
+    { label: '기타 운영 방식', value: pol.etc },
+  ].filter(x => x.value && x.value.trim());
+
+  const vehiclePhoto = vehiclePhotoStore[fid] || null;
+  const hasVehicle = (pol.vehicle && pol.vehicle.trim()) || vehiclePhoto;
+  const hasPolicy = polFields.length > 0 || hasVehicle;
+
+  const policyHtml = hasPolicy ? `
+    <div class="content-section" style="border-left:3px solid var(--accent)">
+      <h3 style="margin-bottom:1rem"><span class="section-title-marker"></span> 운영 방침</h3>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${polFields.map(item => `
+          <div style="background:var(--bg);border-radius:8px;padding:10px 14px">
+            <p style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:4px">${item.label}</p>
+            <p style="font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap">${item.value}</p>
+          </div>`).join('')}
+        ${hasVehicle ? `
+          <div style="background:var(--bg);border-radius:8px;padding:10px 14px">
+            <p style="font-size:11px;color:var(--text3);font-weight:600;margin-bottom:6px">🚗 차량 이용 안내</p>
+            ${pol.vehicle ? `<p style="font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap;margin-bottom:${vehiclePhoto?'10px':'0'}">${pol.vehicle}</p>` : ''}
+            ${vehiclePhoto ? `<img src="${vehiclePhoto}" style="width:100%;max-width:480px;border-radius:10px;border:1px solid var(--border);display:block">` : ''}
+          </div>` : ''}
+      </div>
+    </div>` : '';
+
+  // 객실 현황 표
+  const rooms = f.rooms || [];
+  const roomsHtml = rooms.length > 0 ? `
+    <div class="content-section">
+      <h3 style="margin-bottom:1rem"><span class="section-title-marker"></span> 객실 현황</h3>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:var(--bg2)">
+              <th style="padding:9px 12px;border:1px solid var(--border);text-align:left;font-weight:600;white-space:nowrap">시설 명칭</th>
+              <th style="padding:9px 12px;border:1px solid var(--border);text-align:left;font-weight:600;white-space:nowrap">기준 인원</th>
+              <th style="padding:9px 12px;border:1px solid var(--border);text-align:left;font-weight:600;white-space:nowrap">룸 타입</th>
+              <th style="padding:9px 12px;border:1px solid var(--border);text-align:left;font-weight:600">추가 안내사항</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rooms.map(r => `
+              <tr>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--text)">${esc(r.name||'')}</td>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--text);white-space:nowrap">${esc(r.guests||'')}</td>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--text);white-space:nowrap">${esc(r.type||'')}</td>
+                <td style="padding:8px 12px;border:1px solid var(--border);color:var(--text2)">${esc(r.note||'')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>` : '';
+
+  const photos = photoStore[fid] || [];
+  const pdfInfo = pdfStore[fid] || null;
+
+  const hasMedia = (f.qrItems && f.qrItems.some(q=>q.url)) || photos.length > 0;
+  const mediaHtml = hasMedia ? `
+    <div class="media-section-print">
+      ${(f.qrItems && f.qrItems.some(q=>q.url)) ? `
+        <div class="content-section">
+          <h3>🔗 QR 코드</h3>
+          <div class="qr-display-grid" id="qr-display-${fid}"></div>
+        </div>` : ''}
+      ${photos.length > 0 ? `
+        <div class="content-section">
+          <h3><span class="section-title-marker"></span> 시설 사진</h3>
+          <div class="photos-display-grid" style="grid-template-columns: repeat(2, 1fr)">
+            ${photos.map(p => `
+              <div class="photo-display-item">
+                <img src="${p.src || p}" alt="${esc(p.title||'시설 사진')}">
+                ${p.title ? `<p class="photo-display-title">${esc(p.title)}</p>` : ''}
+                ${p.caption ? `<p class="photo-display-caption">${esc(p.caption)}</p>` : ''}
+              </div>`).join('')}
+          </div>
+        </div>` : ''}
+    </div>` : '';
+
+  const pdfBtn = pdfInfo ? `<a href="${pdfInfo.file}" download="${pdfInfo.name}" style="display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;padding:8px 16px;border-radius:8px;text-decoration:none;font-size:13px;margin-top:8px">📎 ${pdfInfo.name}</a>` : '';
+
+  mc.innerHTML = `
+    <div class="facility-info-header">
+      <h1>${f.description || f.name + ' 이용 방침 안내'}</h1>
+      <p class="facility-meta">시설명: ${f.name}</p>
+      ${f.address ? `<p class="facility-meta">주소: ${f.address}</p>` : ''}
+      <div class="map-buttons print-hide">
+        ${f.mapUrl ? `<button class="btn-map btn-naver" onclick="window.open('${f.mapUrl}','_blank')">네이버 지도 보기</button>` : `<button class="btn-map btn-naver" onclick="window.open('https://map.naver.com/v5/search/${naverQ}','_blank')">네이버 지도 보기</button>`}
+        <button class="btn-map btn-kakao" onclick="window.open('https://map.kakao.com/?q=${kakaoQ}','_blank')">구글맵 보기</button>
+        <button class="btn-map" style="background:#e8e8e8;color:#333" onclick="window.open('https://www.google.com/maps/search/${googleQ}','_blank')">길찾기 보기</button>
+      </div>
+      ${pdfBtn}
+      <div class="checkin-info">
+        <div class="checkin-item"><label>체크인</label><span>${f.checkIn||'15:00'}</span></div>
+        <div class="checkin-item"><label>체크아웃</label><span>${f.checkOut||'11:00'}</span></div>
+      </div>
+    </div>
+    ${policyHtml}
+    ${roomsHtml}
+    ${sectionsHtml}
+    ${mediaHtml}
+  `;
+
+  // Generate QR codes after DOM is ready
+  setTimeout(() => {
+    const qrContainer = document.getElementById('qr-display-'+fid);
+    if (qrContainer && f.qrItems) {
+      qrContainer.innerHTML = ''; // 중복 방지: 먼저 비우기
+      f.qrItems.filter(q=>q.url).forEach(q => {
+        const wrap = document.createElement('div');
+        wrap.className = 'qr-display-item';
+        qrContainer.appendChild(wrap);
+        try {
+          new QRCode(wrap, { text: q.url, width: 110, height: 110, colorDark:'#1a1208', colorLight:'#ffffff', correctLevel: QRCode.CorrectLevel.M });
+        } catch(e) {}
+        const lbl = document.createElement('p');
+        lbl.textContent = q.label;
+        wrap.appendChild(lbl);
+      });
+    }
+  }, 100);
+}
+
+function printPage() {
+  // 화면에 있는 모든 img가 완전히 로드된 후 인쇄 창 열기
+  const images = Array.from(document.querySelectorAll('#user-main-content img'));
+  if (!images.length) { window.print(); return; }
+
+  // 인쇄 준비 중 토스트 표시
+  showToast('🖨 이미지 로딩 중... 잠시만 기다려주세요');
+
+  let loaded = 0;
+  const total = images.length;
+
+  function tryPrint() {
+    loaded++;
+    if (loaded >= total) {
+      // 모든 이미지 로드 완료 후 약간의 여유 시간 추가
+      setTimeout(() => { window.print(); }, 300);
+    }
+  }
+
+  images.forEach(img => {
+    if (img.complete && img.naturalWidth > 0) {
+      tryPrint();
+    } else {
+      img.onload = tryPrint;
+      img.onerror = tryPrint; // 오류 나도 그냥 진행
+    }
+  });
+
+  // 최대 5초 후 강제 인쇄 (이미지 로딩이 너무 길 경우 대비)
+  setTimeout(() => { window.print(); }, 5000);
+}
+
+// Auto-select first facility in user view if loaded
+window.addEventListener('load', () => {
+  // nothing on load — wait for role selection
+});
+</script>
+</body>
+</html>
