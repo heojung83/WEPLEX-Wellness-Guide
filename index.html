@@ -234,6 +234,9 @@
     .photo-display-caption { font-size: 10px; color: #555; }
     /* 인쇄 시 섹션 제목 마커 */
     .section-title-marker { display: inline-block; width: 10px; height: 10px; background: #1a1208; border-radius: 2px; margin-right: 6px; vertical-align: middle; flex-shrink: 0; }
+    /* 인쇄/PDF 시 비밀 섹션 내용 숨김 — 잠금 표시만 출력 */
+    .secret-unlocked-content { display: none !important; }
+    .secret-print-placeholder { display: block !important; }
   }
 
   .hidden { display: none !important; }
@@ -676,6 +679,11 @@ function goUser() {
   // 관리자에서 보던 시설을 직원 화면에서도 바로 표시
   if (currentAdminFacility && currentAdminFacility !== '__policy__') {
     currentUserFacility = currentAdminFacility;
+  }
+  // currentUserFacility가 없으면 첫 번째 활성 시설 강제 선택
+  if (!currentUserFacility) {
+    const first = appData.facilities.find(f => !f.disabled);
+    if (first) currentUserFacility = first.id;
   }
   renderUserFacilityList();
   if (currentUserFacility) renderUserContent(currentUserFacility);
@@ -1133,9 +1141,21 @@ function renderUserContent(fid) {
     // 제목은 있지만 내용이 없으면 숨김
     if (!hasContent) return '';
     const itemsHtml = (s.items||[]).filter(it=>it&&it.trim()).map(it => `<li>${it}</li>`).join('');
+    // 비밀 섹션이 열람된 경우 — 화면에는 보이고 인쇄에는 숨김
+    if (s.secret) {
+      return `
+        <div class="content-section">
+          <h3>${s.title||'섹션'} ${s.required ? '<span class="required-badge">필수</span>' : ''} <span style="font-size:11px;color:#7c3aed;background:#f3e8ff;padding:2px 8px;border-radius:20px">🔓 열람됨</span></h3>
+          <div class="secret-unlocked-content">
+            ${s.mainText ? `<p class="section-main-text">${s.mainText}</p>` : ''}
+            ${itemsHtml ? `<ul style="margin-top:8px">${itemsHtml}</ul>` : ''}
+          </div>
+          <div class="secret-print-placeholder" style="display:none;color:#9c7a50;font-size:13px;padding:8px 0">🔒 보안 항목 — 인쇄 시 표시되지 않습니다.</div>
+        </div>`;
+    }
     return `
       <div class="content-section">
-        <h3>${s.title||'섹션'} ${s.required ? '<span class="required-badge">필수</span>' : ''} ${s.secret ? '<span style="font-size:11px;color:#7c3aed;background:#f3e8ff;padding:2px 8px;border-radius:20px">🔓 열람됨</span>' : ''}</h3>
+        <h3>${s.title||'섹션'} ${s.required ? '<span class="required-badge">필수</span>' : ''}</h3>
         ${s.mainText ? `<p class="section-main-text">${s.mainText}</p>` : ''}
         ${itemsHtml ? `<ul style="margin-top:8px">${itemsHtml}</ul>` : ''}
       </div>`;
