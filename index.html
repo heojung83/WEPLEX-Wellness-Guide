@@ -384,22 +384,6 @@
     .content-section div[style*="overflow-x"] { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   }
 </style>
-<!-- Firebase CDN -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCJMataPFyuexV8CKsAVOqQPZ7R5NTzXt8",
-    authDomain: "weplex-wellness-guide.firebaseapp.com",
-    databaseURL: "https://weplex-wellness-guide-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "weplex-wellness-guide",
-    storageBucket: "weplex-wellness-guide.firebasestorage.app",
-    messagingSenderId: "919729207234",
-    appId: "1:919729207234:web:085e2b4e52d34d3590085b"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-</script>
 </head>
 <body>
 
@@ -539,51 +523,34 @@ const DEFAULT_DATA = {
 };
 
 function loadData() {
-  // 초기값 설정
-  const initial = JSON.parse(JSON.stringify(DEFAULT_DATA));
-  // Firebase에서 비동기로 불러와서 appData 갱신
-  db.ref('weplex_data').get().then(snapshot => {
-    if (snapshot.exists()) {
-      const parsed = snapshot.val();
+  try {
+    const saved = localStorage.getItem('weplex_data');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // 전역 policy 제거 (구버전 호환)
       delete parsed.policy;
       parsed.facilities = parsed.facilities.map(f => {
+        // 사진/PDF 빈값 보완
         const facility = { photos: [], pdfFile: null, pdfName: null, ...f };
+        // 섹션마다 secret/sectionPw 필드 없으면 보완
+        // 단, s2([입실절차 및 비밀번호]) 섹션은 secret 기본값 true
         facility.sections = (facility.sections || []).map(s => {
           const isPasswordSection = s.id === 's2' || s.title.includes('비밀번호');
-          return { secret: isPasswordSection ? true : false, sectionPw: '', ...s };
+          return {
+            secret: isPasswordSection ? true : false,
+            sectionPw: '',
+            ...s
+          };
         });
+        // 시설별 policy 없으면 보완 (구버전 호환)
         if (!facility.policy) facility.policy = {operationDate:'',penalty:'',etc:''};
         if (!facility.rooms) facility.rooms = [];
         return facility;
       });
-      appData = parsed;
-      // 현재 보이는 화면 갱신
-      renderAdminFacilityList();
-      if (currentUserFacility) renderUserContent(currentUserFacility);
+      return parsed;
     }
-  }).catch(() => {
-    // Firebase 실패 시 localStorage 폴백
-    try {
-      const saved = localStorage.getItem('weplex_data');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        delete parsed.policy;
-        parsed.facilities = parsed.facilities.map(f => {
-          const facility = { photos: [], pdfFile: null, pdfName: null, ...f };
-          facility.sections = (facility.sections || []).map(s => {
-            const isPasswordSection = s.id === 's2' || s.title.includes('비밀번호');
-            return { secret: isPasswordSection ? true : false, sectionPw: '', ...s };
-          });
-          if (!facility.policy) facility.policy = {operationDate:'',penalty:'',etc:''};
-          if (!facility.rooms) facility.rooms = [];
-          return facility;
-        });
-        appData = parsed;
-        renderAdminFacilityList();
-      }
-    } catch(e) {}
-  });
-  return initial;
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
 }
 function saveData() {
   try {
@@ -596,20 +563,15 @@ function saveData() {
         return copy;
       })
     };
-    db.ref('weplex_data').set(textOnly).then(() => {
-      showToast('저장되었습니다 ✓');
-    }).catch(() => {
-      localStorage.setItem('weplex_data', JSON.stringify(textOnly));
-      showToast('저장되었습니다 ✓');
-    });
+    localStorage.setItem('weplex_data', JSON.stringify(textOnly));
+    showToast('저장되었습니다 ✓');
   } catch(e) {
-    showToast('⚠ 저장 실패');
+    showToast('⚠ 저장 실패 — 데이터가 너무 큽니다');
   }
 }
 function resetData() {
   if (!confirm('모든 데이터를 초기화하시겠습니까?')) return;
   appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
-  db.ref('weplex_data').remove();
   localStorage.removeItem('weplex_data');
   renderAdminFacilityList();
   document.getElementById('admin-main-content').innerHTML = '<p style="color:var(--text3);font-size:14px">좌측에서 시설을 선택하세요.</p>';
@@ -1363,9 +1325,9 @@ function printPage() {
   setTimeout(() => { window.print(); }, 5000);
 }
 
-// 페이지 로드 시 Firebase에서 데이터 불러오기
+// Auto-select first facility in user view if loaded
 window.addEventListener('load', () => {
-  loadData();
+  // nothing on load — wait for role selection
 });
 </script>
 </body>
