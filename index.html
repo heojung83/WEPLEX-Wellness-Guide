@@ -302,7 +302,8 @@
     .btn-pdf { padding: 7px 12px; font-size: 12px; }
 
     /* 사용자 화면: 사이드바 → 가로 탭 스크롤로 */
-    .user-layout { grid-template-columns: 1fr; }
+    .user-layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; min-height: calc(100vh - 52px); }
+    .user-main { padding: 1rem; max-width: 100%; overflow-y: auto; height: auto; min-height: 0; }
     .user-sidebar {
       border-right: none;
       border-bottom: 1px solid var(--border);
@@ -310,8 +311,11 @@
       display: flex;
       gap: 0.5rem;
       overflow-x: auto;
+      overflow-y: visible;
       white-space: nowrap;
       -webkit-overflow-scrolling: touch;
+      height: auto;
+      min-height: auto;
     }
     .user-sidebar .sidebar-title { display: none; }
     .user-sidebar .facility-item {
