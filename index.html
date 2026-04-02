@@ -765,6 +765,7 @@ function renderAdminForm(fid) {
         <div class="form-group full"><label>주소</label><input id="f-address" value="${esc(f.address)}" oninput="updateField('${fid}','address',this.value)"></div>
         <div class="form-group full"><label>지도 링크 (mapUrl)</label><input id="f-mapUrl" value="${esc(f.mapUrl)}" oninput="updateField('${fid}','mapUrl',this.value)" placeholder="https://map.naver.com/..."></div>
         <div class="form-group full"><label>길찾기 링크 (directionsUrl)</label><input id="f-directionsUrl" value="${esc(f.directionsUrl)}" oninput="updateField('${fid}','directionsUrl',this.value)" placeholder="https://..."></div>
+        <div class="form-group full"><label>시설 웹사이트 (websiteUrl)</label><input id="f-websiteUrl" value="${esc(f.websiteUrl||'')}" oninput="updateField('${fid}','websiteUrl',this.value)" placeholder="https://..."></div>
         <div class="form-group"><label>체크인</label><input id="f-checkin" value="${esc(f.checkIn)}" oninput="updateField('${fid}','checkIn',this.value)" placeholder="15:00"></div>
         <div class="form-group"><label>체크아웃</label><input id="f-checkout" value="${esc(f.checkOut)}" oninput="updateField('${fid}','checkOut',this.value)" placeholder="11:00"></div>
       </div>
@@ -1234,6 +1235,7 @@ function renderUserContent(fid) {
         ${f.mapUrl ? `<button class="btn-map btn-naver" onclick="window.open('${f.mapUrl}','_blank')">네이버 지도 보기</button>` : `<button class="btn-map btn-naver" onclick="window.open('https://map.naver.com/v5/search/${naverQ}','_blank')">네이버 지도 보기</button>`}
         <button class="btn-map btn-kakao" onclick="window.open('https://map.kakao.com/?q=${kakaoQ}','_blank')">구글맵 보기</button>
         <button class="btn-map" style="background:#e8e8e8;color:#333" onclick="window.open('https://www.google.com/maps/search/${googleQ}','_blank')">길찾기 보기</button>
+        ${f.websiteUrl ? `<button class="btn-map" style="background:#1B4F8A;color:#fff" onclick="window.open('${f.websiteUrl}','_blank')">🌐 웹사이트</button>` : ''}
       </div>
       ${pdfBtn}
       <div class="checkin-info">
