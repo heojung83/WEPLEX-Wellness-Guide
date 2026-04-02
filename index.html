@@ -481,23 +481,7 @@
   </div>
 </div>
 
-<script type="module">
-// ===== FIREBASE 설정 =====
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCJMataPFyuexV8CKsAVOqQPZ7R5NTzXt8",
-  authDomain: "weplex-wellness-guide.firebaseapp.com",
-  databaseURL: "https://weplex-wellness-guide-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "weplex-wellness-guide",
-  storageBucket: "weplex-wellness-guide.firebasestorage.app",
-  messagingSenderId: "919729207234",
-  appId: "1:919729207234:web:085e2b4e52d34d3590085b"
-};
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getDatabase(firebaseApp);
-
+<script>
 // ===== DATA STORE =====
 // 사진/PDF는 메모리에만 보관 (localStorage 용량 초과 방지)
 const photoStore = {}; // { facilityId: [base64, ...] }
@@ -538,50 +522,27 @@ const DEFAULT_DATA = {
   ]
 };
 
-function patchFacilities(facilities) {
-  return facilities.map(f => {
-    const facility = { photos: [], pdfFile: null, pdfName: null, ...f };
-    facility.sections = (facility.sections || []).map(s => {
-      const isPasswordSection = s.id === 's2' || s.title.includes('비밀번호');
-      return { secret: isPasswordSection ? true : false, sectionPw: '', ...s };
-    });
-    if (!facility.policy) facility.policy = {operationDate:'',penalty:'',etc:''};
-    if (!facility.rooms) facility.rooms = [];
-    return facility;
-  });
-}
-
 function loadData() {
-  // Firebase에서 불러오기 (비동기) — 초기값은 DEFAULT_DATA
-  get(ref(db, 'weplex_data')).then(snapshot => {
-    if (snapshot.exists()) {
-      const parsed = snapshot.val();
+  try {
+    const saved = localStorage.getItem('weplex_data');
+    if (saved) {
+      const parsed = JSON.parse(saved);
       delete parsed.policy;
-      parsed.facilities = patchFacilities(parsed.facilities);
-      appData = parsed;
-    } else {
-      appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      parsed.facilities = parsed.facilities.map(f => {
+        const facility = { photos: [], pdfFile: null, pdfName: null, ...f };
+        facility.sections = (facility.sections || []).map(s => {
+          const isPasswordSection = s.id === 's2' || s.title.includes('비밀번호');
+          return { secret: isPasswordSection ? true : false, sectionPw: '', ...s };
+        });
+        if (!facility.policy) facility.policy = {operationDate:'',penalty:'',etc:''};
+        if (!facility.rooms) facility.rooms = [];
+        return facility;
+      });
+      return parsed;
     }
-    // 데이터 로드 후 현재 화면 갱신
-    if (currentAdminFacility) renderAdminForm(currentAdminFacility);
-    if (currentUserFacility) renderUserContent(currentUserFacility);
-    renderAdminFacilityList();
-  }).catch(() => {
-    // Firebase 실패 시 localStorage 폴백
-    try {
-      const saved = localStorage.getItem('weplex_data');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        delete parsed.policy;
-        parsed.facilities = patchFacilities(parsed.facilities);
-        appData = parsed;
-      }
-    } catch(e) {}
-  });
-  // 로딩 중에는 DEFAULT_DATA 사용
+  } catch(e) {}
   return JSON.parse(JSON.stringify(DEFAULT_DATA));
 }
-
 function saveData() {
   try {
     const textOnly = {
@@ -593,22 +554,15 @@ function saveData() {
         return copy;
       })
     };
-    // Firebase에 저장
-    set(ref(db, 'weplex_data'), textOnly).then(() => {
-      showToast('저장되었습니다 ✓');
-    }).catch(() => {
-      // Firebase 실패 시 localStorage 폴백
-      localStorage.setItem('weplex_data', JSON.stringify(textOnly));
-      showToast('저장되었습니다 ✓ (로컬)');
-    });
+    localStorage.setItem('weplex_data', JSON.stringify(textOnly));
+    showToast('저장되었습니다 ✓');
   } catch(e) {
-    showToast('⚠ 저장 실패');
+    showToast('⚠ 저장 실패 — 데이터가 너무 큽니다');
   }
 }
 function resetData() {
   if (!confirm('모든 데이터를 초기화하시겠습니까?')) return;
   appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
-  set(ref(db, 'weplex_data'), null);
   localStorage.removeItem('weplex_data');
   renderAdminFacilityList();
   document.getElementById('admin-main-content').innerHTML = '<p style="color:var(--text3);font-size:14px">좌측에서 시설을 선택하세요.</p>';
@@ -1364,49 +1318,8 @@ function printPage() {
 
 // Auto-select first facility in user view if loaded
 window.addEventListener('load', () => {
-  loadData();
+  // nothing on load — wait for role selection
 });
-
-// module 스코프 함수들을 전역으로 노출 (HTML onclick 핸들러용)
-window.goLanding = goLanding;
-window.goAdmin = goAdmin;
-window.goUser = goUser;
-window.askAdminPw = askAdminPw;
-window.saveData = saveData;
-window.resetData = resetData;
-window.addFacility = addFacility;
-window.selectAdminFacility = selectAdminFacility;
-window.toggleDisable = toggleDisable;
-window.deleteFacility = deleteFacility;
-window.selectUserFacility = selectUserFacility;
-window.showUserPolicy = showUserPolicy;
-window.addSection = addSection;
-window.deleteSection = deleteSection;
-window.addItem = addItem;
-window.deleteItem = deleteItem;
-window.toggleSecretSection = toggleSecretSection;
-window.addQrItem = addQrItem;
-window.deleteQrItem = deleteQrItem;
-window.updateField = updateField;
-window.updateSectionField = updateSectionField;
-window.updateItemText = updateItemText;
-window.updateQrItem = updateQrItem;
-window.updatePolicy = updatePolicy;
-window.addRoomRow = addRoomRow;
-window.deleteRoomRow = deleteRoomRow;
-window.updateRoomCell = updateRoomCell;
-window.handlePhotos = handlePhotos;
-window.deletePhoto = deletePhoto;
-window.handlePdf = handlePdf;
-window.handleVehiclePhoto = handleVehiclePhoto;
-window.deleteVehiclePhoto = deleteVehiclePhoto;
-window.changeAdminPw = changeAdminPw;
-window.askSectionPw = askSectionPw;
-window.closePwModal = closePwModal;
-window.togglePwVis = togglePwVis;
-window.submitPw = submitPw;
-window.printPage = printPage;
-window.updatePhotoMeta = updatePhotoMeta;
 </script>
 </body>
 </html>
