@@ -577,6 +577,7 @@ function resetData() {
     desc: '관리자 비밀번호를 입력하면<br>모든 데이터가 초기화됩니다.',
     hint: '',
     onSuccess: () => {
+      closePwModal();  
       appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
       localStorage.removeItem('weplex_data');
       renderAdminFacilityList();
