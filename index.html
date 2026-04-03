@@ -564,8 +564,7 @@ function saveData() {
       })
     };
     localStorage.setItem('weplex_data', JSON.stringify(textOnly));
-    ('저장되었습니다 ✓');db.ref('weplex_data').set(textOnly);
-    showToast
+    showToast('저장되었습니다 ✓');
   } catch(e) {
     showToast('⚠ 저장 실패 — 데이터가 너무 큽니다');
   }
