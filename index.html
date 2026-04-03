@@ -571,11 +571,20 @@ function saveData() {
 }
 function resetData() {
   if (!confirm('모든 데이터를 초기화하시겠습니까?')) return;
-  appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
-  localStorage.removeItem('weplex_data');
-  renderAdminFacilityList();
-  document.getElementById('admin-main-content').innerHTML = '<p style="color:var(--text3);font-size:14px">좌측에서 시설을 선택하세요.</p>';
-  showToast('초기화되었습니다');
+  showPwModal({
+    icon: '⚠️',
+    title: '초기화 확인',
+    desc: '관리자 비밀번호를 입력하면<br>모든 데이터가 초기화됩니다.',
+    hint: '',
+    onSuccess: () => {
+      appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      localStorage.removeItem('weplex_data');
+      renderAdminFacilityList();
+      document.getElementById('admin-main-content').innerHTML = '<p style="color:var(--text3);font-size:14px">좌측에서 시설을 선택하세요.</p>';
+      showToast('초기화되었습니다');
+    },
+    onCancel: () => {}
+  });
 }
 
 let appData = loadData();
