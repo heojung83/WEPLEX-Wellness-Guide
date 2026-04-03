@@ -288,7 +288,6 @@
 
   /* ===== 모바일 전용 (768px 이하) - PC에는 영향 없음 ===== */
   @media (max-width: 768px) {
-    body { overflow-y: auto; }
     /* 랜딩 */
     .landing-title { font-size: 1.8rem; }
     .hero-card { padding: 2rem 1.25rem; }
@@ -303,8 +302,8 @@
     .btn-pdf { padding: 7px 12px; font-size: 12px; }
 
     /* 사용자 화면: 사이드바 → 가로 탭 스크롤로 */
-    .user-layout { grid-template-columns: 1fr; grid-template-rows: auto auto; min-height: 0; }
-    .user-main { padding: 1rem; max-width: 100%; overflow-y: visible; height: auto; min-height: 0; }
+    .user-layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; min-height: calc(100vh - 52px); }
+    .user-main { padding: 1rem; max-width: 100%; overflow-y: auto; height: auto; min-height: 0; }
     .user-sidebar {
       border-right: none;
       border-bottom: 1px solid var(--border);
