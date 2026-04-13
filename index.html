@@ -6,6 +6,68 @@
 <title>WEPLEX WELLNESS - 시설 관리 시스템</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ══════════════════════════════════════════
+//  ★ Supabase 설정 — 여기에 본인 정보 입력
+// ══════════════════════════════════════════
+const SUPABASE_URL    = 'https://amatugceseovfglmhumf.supabase.co';
+const SUPABASE_KEY    = 'sb_publishable_vYR-I8jhf8jbAQt1n1Z6iw_jtEbOPmj'; // ← 복사한 출판 가능 키 붙여넣기
+const STORAGE_BUCKET  = 'photos';                     // ← Supabase Storage 버킷명
+// ══════════════════════════════════════════
+
+let _sb = null;
+function getSB() {
+  if (!_sb) {
+    try { _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) {}
+  }
+  return _sb;
+}
+
+// Supabase에 사진 업로드 → public URL 반환
+async function uploadToSupabase(file, facilityId) {
+  const sb = getSB();
+  if (!sb || !SUPABASE_KEY || SUPABASE_KEY.includes('YOUR_')) return null;
+  try {
+    const ext  = file.name.split('.').pop();
+    const path = `facility_${facilityId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const { data, error } = await sb.storage.from(STORAGE_BUCKET).upload(path, file, { upsert: false });
+    if (error) { console.warn('Supabase 업로드 오류:', error.message); return null; }
+    const { data: pub } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+    return pub?.publicUrl || null;
+  } catch(e) { console.warn('Supabase 업로드 실패:', e); return null; }
+}
+
+// Supabase에서 해당 시설 사진 목록 가져오기
+async function loadPhotosFromSupabase(facilityId) {
+  const sb = getSB();
+  if (!sb || !SUPABASE_KEY || SUPABASE_KEY.includes('YOUR_')) return [];
+  try {
+    const folder = `facility_${facilityId}/`;
+    const { data, error } = await sb.storage.from(STORAGE_BUCKET).list(folder);
+    if (error || !data) return [];
+    return data
+      .filter(f => !f.name.startsWith('.'))
+      .map(f => {
+        const { data: pub } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(folder + f.name);
+        return { src: pub.publicUrl, title: '', caption: '', fromSupabase: true };
+      });
+  } catch(e) { return []; }
+}
+
+// Supabase에서 사진 삭제
+async function deleteFromSupabase(src) {
+  const sb = getSB();
+  if (!sb || !src) return;
+  try {
+    // URL에서 경로 추출
+    const urlParts = src.split('/storage/v1/object/public/' + STORAGE_BUCKET + '/');
+    if (urlParts.length < 2) return;
+    await sb.storage.from(STORAGE_BUCKET).remove([urlParts[1]]);
+  } catch(e) {}
+}
+</script>
+
 <style>
   :root {
     --bg: #fdf8f0;
@@ -82,6 +144,9 @@
   .btn-pdf { background: var(--accent); color: #fff; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
   .btn-pdf:hover { background: var(--accent2); }
   .btn-save { background: #2563eb; color: #fff; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; font-weight: 500; transition: background 0.2s; }
+  .sb-status-chip { display: flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .sb-ok   { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+  .sb-warn { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
   .btn-save:hover { background: #1d4ed8; }
   .btn-reset { background: rgba(220,38,38,0.15); color: #ef4444; border: 1px solid rgba(220,38,38,0.3); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: inherit; transition: background 0.2s; }
   .btn-reset:hover { background: rgba(220,38,38,0.25); }
@@ -219,26 +284,148 @@
 
   /* Print styles */
   @media print {
-    body { background: #fff; }
-    .page-header, .user-sidebar, #landing, #admin-view { display: none !important; }
+    /* ── 기본 레이아웃 초기화 ── */
+    @page { margin: 14mm 13mm; }
+    html { font-size: 98%; }
+    body {
+      background: #fff;
+      color: #1a1208;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      orphans: 2;
+      widows: 2;
+    }
+    .page-header, .user-sidebar, #landing, #admin-view, .toast, #pw-overlay { display: none !important; }
     #user-view { display: block !important; }
     .user-layout { display: block; }
-    .user-main { padding: 0; }
-    .content-section, .facility-info-header { break-inside: avoid; box-shadow: none; }
-    .media-section-print { page-break-before: always; }
-    .btn-pdf, .map-buttons, .print-hide { display: none !important; }
-    /* 인쇄 시 사진은 3열 */
-    .photos-display-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .photo-display-item img { aspect-ratio: 4/3; border-radius: 6px; }
-    .photo-display-title { font-size: 11px; font-weight: 600; }
-    .photo-display-caption { font-size: 10px; color: #555; }
-    /* 인쇄 시 섹션 제목 마커 */
-    .section-title-marker { display: inline-block; width: 10px; height: 10px; background: #1a1208; border-radius: 2px; margin-right: 6px; vertical-align: middle; flex-shrink: 0; }
-    /* 인쇄/PDF 시 비밀 섹션 내용 숨김 — 잠금 표시만 출력 */
+    .user-main { padding: 0; max-width: 100%; }
+
+    /* ── 버튼·지도·인쇄숨김 ── */
+    .btn-pdf, .map-buttons, .print-hide, .btn-back, .header-actions { display: none !important; }
+
+    /* ── 섹션 카드: 섹션 자체는 자연스럽게 페이지 넘김 허용 ──
+       (section 전체에 avoid를 걸면 큰 섹션이 통째로 다음 페이지로 밀려
+        이전 페이지에 빈 여백이 생기는 문제 발생)  */
+    .content-section {
+      break-inside: auto;
+      page-break-inside: auto;
+      box-shadow: none;
+      border: 1px solid #e0d0bc;
+      margin-bottom: 0.5rem;
+      padding: 0.9rem 1rem;
+    }
+    .facility-info-header {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      box-shadow: none;
+      border: 1px solid #e0d0bc;
+      margin-bottom: 0.5rem;
+      padding: 0.9rem 1rem;
+    }
+
+    /* ── 제목은 바로 다음 내용과 함께 유지 ── */
+    .content-section h3 {
+      break-after: avoid;
+      page-break-after: avoid;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ── 리스트 항목 단위로만 잘림 방지 ── */
+    .content-section ul li {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* ── 운영방침 내 개별 항목 ── */
+    .content-section > div > div {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* ── 객실 현황 표 ── */
+    table { width: 100%; }
+    thead { display: table-header-group; }
+    tr {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* ── 비밀 잠금 섹션 ── */
+    .secret-locked {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* ── 미디어(사진·QR) 섹션 — 새 페이지 시작 ── */
+    .media-section-print {
+      page-break-before: always;
+      break-before: page;
+    }
+
+    /* ── 사진 그리드: 2열 × 3행 = A4 한 페이지에 최대 6장 ──
+       grid는 크롬 인쇄 엔진에서 무시될 수 있어 flexbox로 강제 2열 지정
+       각 사진 width: calc(50% - 5px) → 정확히 2열
+       height: 70mm → A4 기준 3행이 한 페이지에 들어오는 크기            */
+    .photos-display-grid {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      gap: 8px !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    .photo-display-item {
+      flex: 0 0 calc(50% - 4px) !important;
+      width: calc(50% - 4px) !important;
+      max-width: calc(50% - 4px) !important;
+      box-sizing: border-box !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      padding-bottom: 0 !important;
+      border-bottom: none !important;
+      margin-bottom: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 2px !important;
+    }
+    .photo-display-item img {
+      width: 100% !important;
+      height: 70mm !important;
+      max-height: 70mm !important;
+      object-fit: cover !important;
+      border-radius: 4px !important;
+      border: 1px solid #e0d0bc !important;
+      display: block !important;
+    }
+    .photo-display-title { font-size: 10px !important; font-weight: 600 !important; text-align: center !important; margin-top: 2px !important; line-height: 1.3 !important; }
+    .photo-display-caption { font-size: 9px !important; color: #555 !important; text-align: center !important; line-height: 1.3 !important; }
+
+    /* ── QR 아이템 ── */
+    .qr-display-item {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    /* ── 섹션 제목 마커 ── */
+    .section-title-marker {
+      display: inline-block;
+      width: 10px; height: 10px;
+      background: #1a1208;
+      border-radius: 2px;
+      margin-right: 6px;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    /* ── 비밀 섹션 인쇄 처리 ── */
     .secret-unlocked-content { display: none !important; }
     .secret-print-placeholder { display: block !important; }
-  }
 
+    /* ── 체크인/아웃 줄이기 ── */
+    .checkin-item span { font-size: 18px; }
+
+    /* ── 마지막 요소 하단 여백 제거 ── */
+    .user-main > *:last-child { margin-bottom: 0; }
+  }
   .hidden { display: none !important; }
   .tag-required { color: #d97706; font-size: 10px; }
 
@@ -441,7 +628,8 @@
     </div>
     <div class="header-actions">
       <button class="btn-reset" onclick="resetData()">초기화</button>
-      <button class="btn-save" onclick="saveData()">💾 저장</button>
+      <div id="sb-chip" class="sb-status-chip sb-warn" title="Supabase 연결 상태">⚠ 로컬 저장</div>
+        <button class="btn-save" onclick="saveData()">💾 저장</button>
       <button class="btn-save" onclick="exportData()">📤 백업</button>
       <label class="btn-save" style="cursor:pointer">📂 복원<input type="file" accept=".json" style="display:none" onchange="importData(this)"></label>
     </div>
@@ -485,10 +673,97 @@
 
 <script>
 // ===== DATA STORE =====
-// 사진/PDF는 메모리에만 보관 (localStorage 용량 초과 방지)
-const photoStore = {}; // { facilityId: [base64, ...] }
-const pdfStore = {};   // { facilityId: { file: base64, name: str } }
+// 텍스트 데이터: localStorage / 사진·PDF: IndexedDB (용량 제한 없음)
+const photoStore = {};       // { facilityId: [{src, title, caption}, ...] }
+const pdfStore = {};         // { facilityId: { file: base64, name: str } }
 const vehiclePhotoStore = {}; // { facilityId: base64 }
+
+// ── IndexedDB 헬퍼 ──
+const DB_NAME = 'weplex_media_db';
+const DB_VERSION = 1;
+let _db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    if (_db) { resolve(_db); return; }
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('photos'))   db.createObjectStore('photos');
+      if (!db.objectStoreNames.contains('pdfs'))     db.createObjectStore('pdfs');
+      if (!db.objectStoreNames.contains('vehicles')) db.createObjectStore('vehicles');
+    };
+    req.onsuccess = e => { _db = e.target.result; resolve(_db); };
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+function dbSet(store, key, value) {
+  return openDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readwrite');
+    tx.objectStore(store).put(value, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror    = e => reject(e.target.error);
+  }));
+}
+
+function dbGet(store, key) {
+  return openDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).get(key);
+    req.onsuccess = () => resolve(req.result ?? null);
+    req.onerror   = e => reject(e.target.error);
+  }));
+}
+
+function dbDelete(store, key) {
+  return openDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readwrite');
+    tx.objectStore(store).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror    = e => reject(e.target.error);
+  }));
+}
+
+function dbGetAll(store) {
+  return openDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readonly');
+    const os = tx.objectStore(store);
+    const keys = [], vals = [];
+    os.openCursor().onsuccess = e => {
+      const cur = e.target.result;
+      if (cur) { keys.push(cur.key); vals.push(cur.value); cur.continue(); }
+      else resolve({ keys, vals });
+    };
+    tx.onerror = e => reject(e.target.error);
+  }));
+}
+
+// 앱 초기화 시 IndexedDB에서 모든 미디어 로드
+async function loadAllMediaFromDB() {
+  try {
+    const [ph, pd, ve] = await Promise.all([
+      dbGetAll('photos'), dbGetAll('pdfs'), dbGetAll('vehicles')
+    ]);
+    ph.keys.forEach((k, i) => { photoStore[k]       = ph.vals[i]; });
+    pd.keys.forEach((k, i) => { pdfStore[k]         = pd.vals[i]; });
+    ve.keys.forEach((k, i) => { vehiclePhotoStore[k] = ve.vals[i]; });
+  } catch(e) {
+    console.warn('IndexedDB 미디어 로드 실패:', e);
+  }
+}
+
+function savePhotosToDBNow(fid) {
+  dbSet('photos', fid, photoStore[fid] || []).catch(e => console.warn('사진 저장 실패:', e));
+}
+function savePdfToDBNow(fid) {
+  if (pdfStore[fid]) dbSet('pdfs', fid, pdfStore[fid]).catch(e => console.warn('PDF 저장 실패:', e));
+  else dbDelete('pdfs', fid).catch(() => {});
+}
+function saveVehicleToDBNow(fid) {
+  if (vehiclePhotoStore[fid]) dbSet('vehicles', fid, vehiclePhotoStore[fid]).catch(e => console.warn('차량 사진 저장 실패:', e));
+  else dbDelete('vehicles', fid).catch(() => {});
+}
 
 const DEFAULT_DATA = {
   facilities: [
@@ -517,11 +792,17 @@ const DEFAULT_DATA = {
       pdfFile: null,
       pdfName: null,
     },
-    { id:'f2', name:'청평 크레이에르빌라', subtitle:'빌라형 휴양시설', category:'빌라형 휴양시설', description:'', address:'', mapUrl:'', directionsUrl:'', checkIn:'15:00', checkOut:'11:00', policy:{operationDate:'',penalty:'',etc:''}, rooms:[], sections:[], qrItems:[], photos:[], pdfFile:null, pdfName:null },
+    { id:'f2', name:'청평 르메이에르', subtitle:'빌라형 휴양시설', category:'빌라형 휴양시설', description:'', address:'', mapUrl:'', directionsUrl:'', checkIn:'15:00', checkOut:'11:00', policy:{operationDate:'',penalty:'',etc:''}, rooms:[], sections:[], qrItems:[], photos:[], pdfFile:null, pdfName:null },
     { id:'f3', name:'속초 서희 2차', subtitle:'아파트형 휴양시설', category:'아파트형 휴양시설', description:'', address:'', mapUrl:'', directionsUrl:'', checkIn:'15:00', checkOut:'11:00', policy:{operationDate:'',penalty:'',etc:''}, rooms:[], sections:[], qrItems:[], photos:[], pdfFile:null, pdfName:null },
     { id:'f4', name:'속초 청호아이파크', subtitle:'아파트형 휴양시설', category:'아파트형 휴양시설', description:'', address:'', mapUrl:'', directionsUrl:'', checkIn:'15:00', checkOut:'11:00', policy:{operationDate:'',penalty:'',etc:''}, rooms:[], sections:[], qrItems:[], photos:[], pdfFile:null, pdfName:null },
     { id:'f5', name:'우이동 We CAMP', subtitle:'캠핑형 휴양시설', category:'캠핑형 휴양시설', description:'', address:'', mapUrl:'', directionsUrl:'', checkIn:'15:00', checkOut:'11:00', policy:{operationDate:'',penalty:'',etc:''}, rooms:[], sections:[], qrItems:[], photos:[], pdfFile:null, pdfName:null },
   ]
+};
+
+// 시설명 마이그레이션 맵 — 구이름: 새이름
+// 앞으로 이름 변경 요청 시 여기에 추가하면 저장된 localStorage에도 자동 반영
+const FACILITY_NAME_MIGRATIONS = {
+  '청평 크레이에르빌라': '청평 르메이에르',
 };
 
 function loadData() {
@@ -532,6 +813,8 @@ function loadData() {
       // 전역 policy 제거 (구버전 호환)
       delete parsed.policy;
       parsed.facilities = parsed.facilities.map(f => {
+        // 시설명 마이그레이션 — 구 이름이 남아 있으면 자동 치환
+        if (FACILITY_NAME_MIGRATIONS[f.name]) f.name = FACILITY_NAME_MIGRATIONS[f.name];
         // 사진/PDF 빈값 보완
         const facility = { photos: [], pdfFile: null, pdfName: null, ...f };
         // 섹션마다 secret/sectionPw 필드 없으면 보완
@@ -615,9 +898,18 @@ function resetData() {
     desc: '관리자 비밀번호를 입력하면<br>모든 데이터가 초기화됩니다.',
     hint: '',
     onSuccess: () => {
-      closePwModal();  
+      closePwModal();
       appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
       localStorage.removeItem('weplex_data');
+      // IndexedDB 미디어도 모두 삭제
+      openDB().then(db => {
+        ['photos','pdfs','vehicles'].forEach(store => {
+          db.transaction(store,'readwrite').objectStore(store).clear();
+        });
+        Object.keys(photoStore).forEach(k => delete photoStore[k]);
+        Object.keys(pdfStore).forEach(k => delete pdfStore[k]);
+        Object.keys(vehiclePhotoStore).forEach(k => delete vehiclePhotoStore[k]);
+      }).catch(() => {});
       renderAdminFacilityList();
       document.getElementById('admin-main-content').innerHTML = '<p style="color:var(--text3);font-size:14px">좌측에서 시설을 선택하세요.</p>';
       showToast('초기화되었습니다');
@@ -972,7 +1264,10 @@ function renderPhotos(fid) {
 }
 
 function updatePhotoMeta(fid, idx, key, val) {
-  if (photoStore[fid] && photoStore[fid][idx]) photoStore[fid][idx][key] = val;
+  if (photoStore[fid] && photoStore[fid][idx]) {
+    photoStore[fid][idx][key] = val;
+    savePhotosToDBNow(fid);
+  }
 }
 
 // ===== ADMIN: DATA UPDATERS =====
@@ -1041,6 +1336,7 @@ function handleVehiclePhoto(fid, input) {
   const reader = new FileReader();
   reader.onload = e => {
     vehiclePhotoStore[fid] = e.target.result;
+    saveVehicleToDBNow(fid);
     const preview = document.getElementById('vehicle-preview-' + fid);
     if (preview) preview.innerHTML = `<img src="${e.target.result}" style="height:60px;border-radius:8px;border:1px solid var(--border)"><button onclick="deleteVehiclePhoto('${fid}')" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px">✕ 삭제</button>`;
   };
@@ -1048,6 +1344,7 @@ function handleVehiclePhoto(fid, input) {
 }
 function deleteVehiclePhoto(fid) {
   delete vehiclePhotoStore[fid];
+  saveVehicleToDBNow(fid);
   const preview = document.getElementById('vehicle-preview-' + fid);
   if (preview) preview.innerHTML = '<span style="font-size:12px;color:var(--text3)">선택된 사진 없음</span>';
 }
@@ -1099,29 +1396,64 @@ function changeAdminPw() {
 function deleteFacility(fid) {
   if (!confirm('이 시설을 삭제하시겠습니까?')) return;
   appData.facilities = appData.facilities.filter(x => x.id !== fid);
+  delete photoStore[fid];
+  delete pdfStore[fid];
+  delete vehiclePhotoStore[fid];
+  dbDelete('photos', fid).catch(() => {});
+  dbDelete('pdfs', fid).catch(() => {});
+  dbDelete('vehicles', fid).catch(() => {});
   currentAdminFacility = null;
   saveData();
   renderAdminFacilityList();
   document.getElementById('admin-main-content').innerHTML = '<p style="color:var(--text3);font-size:14px">좌측에서 시설을 선택하세요.</p>';
 }
 
-function handlePhotos(fid, input) {
+async function handlePhotos(fid, input) {
   if (!photoStore[fid]) photoStore[fid] = [];
   const files = Array.from(input.files);
   let pending = files.length;
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      photoStore[fid].push({ src: e.target.result, title: '', caption: '' });
+
+  showToast('📤 사진 업로드 중...');
+
+  for (const file of files) {
+    // 1. Supabase 업로드 시도
+    const sbUrl = await uploadToSupabase(file, fid);
+
+    if (sbUrl) {
+      // Supabase 성공 → URL 저장
+      photoStore[fid].push({ src: sbUrl, title: '', caption: '', fromSupabase: true });
       pending--;
-      if (!pending) document.getElementById('photo-grid-'+fid).innerHTML = renderPhotos(fid);
-    };
-    reader.readAsDataURL(file);
-  });
+      if (!pending) {
+        document.getElementById('photo-grid-'+fid).innerHTML = renderPhotos(fid);
+        savePhotosToDBNow(fid);
+        showToast('✅ Supabase에 사진 저장 완료! 어디서나 볼 수 있어요.');
+      }
+    } else {
+      // Supabase 미설정/실패 → 기존 IndexedDB 방식 (로컬 저장)
+      const reader = new FileReader();
+      reader.onload = e => {
+        photoStore[fid].push({ src: e.target.result, title: '', caption: '' });
+        pending--;
+        if (!pending) {
+          document.getElementById('photo-grid-'+fid).innerHTML = renderPhotos(fid);
+          savePhotosToDBNow(fid);
+          showToast('⚠️ 로컬에만 저장됨. Supabase 키를 설정하면 웹에서도 볼 수 있어요.');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  }
 }
 function deletePhoto(fid, idx) {
-  if (photoStore[fid]) photoStore[fid].splice(idx, 1);
+  if (photoStore[fid]) {
+    const photo = photoStore[fid][idx];
+    if (photo && photo.fromSupabase && photo.src) {
+      deleteFromSupabase(photo.src); // Supabase에서도 삭제
+    }
+    photoStore[fid].splice(idx, 1);
+  }
   document.getElementById('photo-grid-'+fid).innerHTML = renderPhotos(fid);
+  savePhotosToDBNow(fid);
 }
 function handlePdf(fid, input) {
   const f = appData.facilities.find(x => x.id === fid);
@@ -1133,6 +1465,7 @@ function handlePdf(fid, input) {
     pdfStore[fid].file = e.target.result;
     pdfStore[fid].name = file.name;
     f.pdfName = file.name; // 이름만 메타로 보관
+    savePdfToDBNow(fid);
     showToast('PDF 첨부됨: ' + file.name);
     renderAdminForm(fid);
   };
@@ -1374,8 +1707,35 @@ function printPage() {
 }
 
 // Auto-select first facility in user view if loaded
-window.addEventListener('load', () => {
-  // nothing on load — wait for role selection
+
+// Supabase 연결 상태 체크
+async function checkSupabaseStatus() {
+  const chip = document.getElementById('sb-chip');
+  if (!chip) return;
+  if (!SUPABASE_KEY || SUPABASE_KEY.includes('YOUR_')) {
+    chip.className = 'sb-status-chip sb-warn';
+    chip.textContent = '⚠ 로컬 저장';
+    chip.title = 'Supabase 키 미설정 — 사진이 이 기기에만 저장됩니다';
+    return;
+  }
+  try {
+    const sb = getSB();
+    const { data, error } = await sb.storage.from(STORAGE_BUCKET).list('', { limit: 1 });
+    if (error) throw error;
+    chip.className = 'sb-status-chip sb-ok';
+    chip.textContent = '☁ Supabase 연결됨';
+    chip.title = 'Supabase Storage 연결됨 — 사진이 클라우드에 저장됩니다';
+  } catch(e) {
+    chip.className = 'sb-status-chip sb-warn';
+    chip.textContent = '⚠ 연결 오류';
+    chip.title = 'Supabase 연결 실패: ' + e.message;
+  }
+}
+
+window.addEventListener('load', async () => {
+  checkSupabaseStatus();
+  // IndexedDB에서 사진/PDF/차량 사진 복원
+  await loadAllMediaFromDB();
 });
 </script>
 </body>
